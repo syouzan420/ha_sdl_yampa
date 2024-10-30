@@ -1,0 +1,19 @@
+令和5
+12月5日
+1 2
+3 3
+6
+100 100 200 200 drawLine
+OK.
+5 grid
+OK.
+18 load
+
+12月14日
+encoding EUC-JP utf-8
+Operating system debian
+Nix-OS
+obs
+pipewire
+Xcomposit
+GeForce GTS 450

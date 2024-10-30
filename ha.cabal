@@ -1,0 +1,144 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           ha
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/ha#readme>
+homepage:       https://github.com/githubuser/ha#readme
+bug-reports:    https://github.com/githubuser/ha/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2023 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/ha
+
+library
+  exposed-modules:
+      Block
+      Game.WkAction
+      Game.WkAudio
+      Game.WkAudio2
+      Game.WkData
+      Game.WkDraw
+      Game.WkEvent
+      Game.WkLib
+      Game.WkLoad
+      Game.WkLoop
+      Game.WkMain
+      Game.WkMap
+      Game.WkVideo
+      General
+      Mana.Mana
+      Mana.MyTree
+      MyAction
+      MyApp
+      MyCode
+      MyData
+      MyEvent
+      MyFile
+      MyLib
+      MySDL.MyAudio
+      MySDL.MyDraw
+      MySDL.MyInit
+      MySDL.MyInitVideo
+      MySDL.MyInput
+      MySDL.MyLoad
+      MySDL.MyOutput
+  other-modules:
+      Paths_ha
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      ALUT
+    , ObjectName
+    , OpenAL
+    , StateVar
+    , Yampa
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , linear
+    , mtl
+    , sdl2
+    , sdl2-gfx
+    , sdl2-image
+    , sdl2-mixer
+    , sdl2-ttf
+    , split
+    , text
+    , vector
+  default-language: Haskell2010
+
+executable ha-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_ha
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      ALUT
+    , ObjectName
+    , OpenAL
+    , StateVar
+    , Yampa
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , ha
+    , linear
+    , mtl
+    , sdl2
+    , sdl2-gfx
+    , sdl2-image
+    , sdl2-mixer
+    , sdl2-ttf
+    , split
+    , text
+    , vector
+  default-language: Haskell2010
+
+test-suite ha-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_ha
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      ALUT
+    , ObjectName
+    , OpenAL
+    , StateVar
+    , Yampa
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , ha
+    , linear
+    , mtl
+    , sdl2
+    , sdl2-gfx
+    , sdl2-image
+    , sdl2-mixer
+    , sdl2-ttf
+    , split
+    , text
+    , vector
+  default-language: Haskell2010

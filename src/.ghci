@@ -1,0 +1,2 @@
+:set -XOverloadedStrings
+:module + Mana.hs MyTree.hs General.hs

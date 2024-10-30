@@ -1,0 +1,17 @@
+令和5 12/3
+どうやって イメージのピクセルを變更するか
+
+imageのsurfaceについて
+1. surfaceを lockSurface でロックする
+2. surfaceの pointer を得る
+  MonadIO m => Surface -> m (Ptr ())
+3. pointerから VectorIO word8 を生成する
+  new :: (PrimMonad m, Storable a) =>
+        Int -> m (MVector (PrimState m) a)
+  unsafeFromForeignPtr0 :: Storable a =>
+        ForeignPtr a -> Int -> MVectors s a
+4. うーん・・・
+5. createRGBSurfaceFrom :: (Functor m, MonadIO m) =>
+     IOVector Word8 -> V2 CInt -> CInt -> PixelFormat -> m Surface
+     で新たなsurfaceをつくる
+6. もとのsurfaceを unlockSurface でアンロックする

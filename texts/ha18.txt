@@ -1,0 +1,56 @@
+10 10 64 128 50 ("block_ho") drawImage
+OK.
+```a oneBlock :: k i
+clear
+4 color
+1 lineSize
+3 grid
+1 1 0 "tama" block
+2 (1 a) 0 "ho" block
+1 2 3 "arg" block
+2 1 0 "arg" block
+0 2 0 "midu" block
+```
+run
+OK.
+2 oneBlock
+OK.
+abc :: k = 3
+OK.
+a :: k = 4
+OK.
+a
+4
+1 a
+a otherClear ::k i = clear 2 color
+OK.
+3 otherClear
+a あか :: k i = 2 2 a "ho" block 
+OK.
+3 あか
+OK.
+問題;rb 點 てん
+函數の最初の引數に 括弧や函數を適用できない
+文字列を評価する際 函數名と一致する文字列が抽出されてしまふ
+
+前者は makeManas 評価時の問題であり
+後者は makeMana 評価時の問題である
+
+令和5
+11月27日
+多分一應解決した
+
+11月28日
+函數の引数に別の函數や括弧を適用したとき 期待通りの評価ができない といふ問題があった
+
+かけ算の場合に それは解決したが 括弧の場合は まだ検証してゐない
+検証したところ 括弧の場合もうまく行くやうだった
+
+次の目標は ＝ による定義を實装することだ
+
+11月30日
+イコールの實装が成功した
+Yo の推論もできるやうにしたい
+
+12月1日
+17757

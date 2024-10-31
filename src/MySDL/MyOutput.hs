@@ -31,8 +31,8 @@ type Dots = [Dot]
 type JBacks = [JBak]
 data CFile = CFile !HaText !FileNum !TextPos !Dots !Bool !JBacks
 
-myOut :: Renderer -> [Font] -> [Texture] -> Input -> S.StateT State IO Bool 
-myOut re fonts itexs inp = do
+myOut :: Renderer -> [Font] -> [Texture] -> Bool -> Input -> S.StateT State IO Bool 
+myOut re fonts itexs _ inp = do
   st <- S.get
   let actSt = act st
 

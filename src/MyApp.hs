@@ -40,7 +40,7 @@ appMain =
         S.runStateT (reactimate 
                         initInput 
                         inputEvent 
-                        (\_ inp -> myOut renderer fonts itexs inp)
+                        (myOut renderer fonts itexs)
                         identity 
                     ) newState
 

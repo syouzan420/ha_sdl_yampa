@@ -11,22 +11,6 @@ import MyEvent (inputEvent,initInput)
 import MyData (initState,initActive,initAttr,initJumping
               ,State(..),Active(..),Attr(..),Jumping(..))
 
-
-{--
-appMain :: IO ()
-appMain =
-  withMyInit $ do
-    (fonts,sur,text,(fpos,tpos),dots,jumps) <- myLoad
-    withMyVideo sur $
-      \(renderer,itexs) -> do
-        let newActive = initActive{tex=text,dts=dots,fps=fpos,tps=tpos}
-            newAttr = initAttr{jmp=initJumping{jps=jumps}}
-            newState = initState{act=newActive,atr=newAttr} 
-        stopTextInput
-        S.runStateT (myLoop renderer fonts itexs) newState
-
---}
-
 appMain :: IO ()
 appMain =
   withMyInit $ do

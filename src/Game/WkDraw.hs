@@ -24,6 +24,8 @@ import Game.WkData (Waka(..),Size,Pos,GMap,Direction(..),Cha(..),mapUpLeftPos,pl
 import Game.WkLib (cosList,shiftList)
 import MyData (TextData,WMode(..))
 
+import Debug.Trace (trace)
+
 type MapSize = Size
 type TileSize = CInt
 type PlayerNum = Int
@@ -39,11 +41,12 @@ wkDraw re fonts surfs texture textData wk = do
   let (mszWk,tszWk,mpsWk,mrpWk,acoWk,iscWk) = (msz wk,tsz wk,mps wk,mrp wk,aco wk,isc wk)
   initDraw re
   --unless (tmd wk==0) $ mapDraw2 re texture mszWk tszWk mpsWk mrpWk
-  unless (tmd wk==0) $ mapDraw re (head surfs) (gmp wk) mszWk tszWk mpsWk acoWk
+  unless (tmd wk==0) $ 
+      mapDraw re (head surfs) (gmp wk) mszWk tszWk mpsWk mrpWk acoWk
   when (ipl wk) $ do
       playerDraw re (surfs!!1) (tsz wk) plnWk plyWk mpsWk mrpWk iscWk acoWk
   textsDraw re fonts T True False (tps wk) textData
-  present re
+  trace ("tsz:"<>show tszWk<>" mps:"<>show mpsWk<>" mrp:"<>show mrpWk<>" aco:"<>show acoWk) $ present re
 
 playerDraw :: (MonadIO m) => Renderer -> [Surface] -> 
                   TileSize -> PlayerNum -> Cha -> MapPos -> MapRPos ->Bool -> Int -> m ()
@@ -76,22 +79,13 @@ visibleGmap gmap (V2 mw mh) (V2 mx my) =
 visibleMapLine :: Int -> Int -> String -> String
 visibleMapLine mw mx mLine = take mw $ drop mx mLine
 
-mapDraw2 :: MonadIO m => Renderer -> Texture -> MapSize -> TileSize 
-                                              -> MapPos -> MapRPos -> m ()
-mapDraw2 re tx mSize tSize mPos mRPos = do
-  let source = mPos * V2 tSize tSize + mRPos
-      width = mSize * V2 tSize tSize
-  copy re tx (Just (Rectangle (P source) width))
-             (Just (Rectangle (P mapUpLeftPos) width))
-
-
-mapDraw :: (MonadIO m) => Renderer -> [Surface]
-                         -> GMap -> MapSize -> TileSize -> Pos -> Int -> m ()
-mapDraw re surfs gmap mSize tSize mPos count = do 
+mapDraw :: (MonadIO m) => Renderer -> [Surface] -> GMap -> MapSize 
+                            -> TileSize -> MapPos -> MapRPos -> Int -> m ()
+mapDraw re surfs gmap mSize tSize mPos mRPos count = do 
   let enums = repeat 0
       vGmap = visibleGmap gmap mSize mPos
   textures <- createTextures re surfs enums count 
-  texMapDraw re textures vGmap tSize mapUpLeftPos 
+  texMapDraw re textures vGmap tSize (mapUpLeftPos - mRPos) 
   mapM_ destroyTexture textures
 
 texMapDraw :: (MonadIO m) => Renderer -> [Texture] -> GMap -> TileSize -> Pos -> m ()
@@ -126,6 +120,8 @@ createTexture re surf i count = do
             nsurf <- liftIO$createNewSurface surf count
             createTextureFromSurface re nsurf 
 
+------------------------------------------------------
+
 createNewSurface :: Surface -> Int -> IO Surface
 createNewSurface surf count = do
   lockSurface surf
@@ -134,15 +130,15 @@ createNewSurface surf count = do
   let sPixFormat = fromNumber (SDLT.pixelFormatFormat surPixFormat) :: PixelFormat
   pointer <- surfacePixels surf
   frPointer <- newForeignPtr_ (castPtr pointer)
-  let mvector = VM.unsafeFromForeignPtr0 frPointer (4*64*64)
+  let mvector = VM.unsafeFromForeignPtr0 frPointer (4*32*32)
   unlockSurface surf
   waveEffect mvector count
-  createRGBSurfaceFrom mvector (V2 64 64) (4*64) sPixFormat
+  createRGBSurfaceFrom mvector (V2 32 32) (4*32) sPixFormat
 
 waveEffect :: VM.IOVector Word8 -> Int -> IO ()
 waveEffect vect t = do
-  let defs = cosList 64 1 2 t
-  lst <- makeList vect 64 0 (V2 0 0)
+  let defs = cosList 32 1 2 t
+  lst <- makeList vect 32 0 (V2 0 0)
   let sList = zipWith (shiftList (V4 255 0 0 0)) lst defs
   let tList = transpose sList
   let s2List = zipWith (shiftList (V4 255 0 0 0)) tList defs
@@ -153,7 +149,7 @@ writeList :: VM.IOVector Word8 -> [[V4 Word8]] -> Int -> IO ()
 writeList _ [] _ = return ()
 writeList vect (y:ys) si = do
   writeListX vect y si
-  writeList vect ys (si+4*64)
+  writeList vect ys (si+4*32)
 
 writeListX :: VM.IOVector Word8 -> [V4 Word8] -> Int -> IO ()
 writeListX _ [] _ = return ()
@@ -181,5 +177,17 @@ makeV4 vect i = do
   return (V4 a b c d)
 
 pToI :: V2 Int -> Int
-pToI (V2 p q) = 4*(64*q + p)
+pToI (V2 p q) = 4*(32*q + p)
+
+
+-------------------------------------------
+
+mapDraw2 :: MonadIO m => Renderer -> Texture -> MapSize -> TileSize 
+                                              -> MapPos -> MapRPos -> m ()
+mapDraw2 re tx mSize tSize mPos mRPos = do
+  let source = mPos * V2 tSize tSize + mRPos
+      width = mSize * V2 tSize tSize
+  copy re tx (Just (Rectangle (P source) width))
+             (Just (Rectangle (P mapUpLeftPos) width))
+
 

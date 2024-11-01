@@ -8,15 +8,18 @@ import qualified SDL.Raw.Types as SDLT
 import SDL.Internal.Numbered (fromNumber)
 import SDL.Vect (Point(P),V2(..))
 import SDL.Video.Renderer (Surface,surfaceFormat,createRGBSurface,surfaceBlit
-                          ,SurfacePixelFormat (..))
+                          ,SurfacePixelFormat (..),lockSurface,unlockSurface
+                          ,PixelFormat(..))
 import Game.WkData (GMap,Pos)
 
 createMapS :: (MonadIO m) => [Surface] -> GMap -> m Surface
 createMapS sfs gm = do
   let (V2 msx msy) = V2 (fromIntegral (length (head gm))) (fromIntegral (length gm))
+  mapM_ lockSurface sfs
   SurfacePixelFormat ppf <- surfaceFormat (head sfs)
   spf <- liftIO $ peek ppf
-  let pfm = fromNumber (SDLT.pixelFormatFormat spf)
+  let pfm = fromNumber (SDLT.pixelFormatFormat spf) :: PixelFormat
+  mapM_ unlockSurface sfs
   mapSurf <- createRGBSurface (V2 (32*msx) (32*msy)) pfm 
   copyMapSurfs sfs mapSurf gm (V2 0 0)
   return mapSurf

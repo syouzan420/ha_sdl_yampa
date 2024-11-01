@@ -32,7 +32,6 @@ import Game.WkData (Waka(..),Input(..),IMode(..),Direction(..),Cha(..),Pos,GMap,
 wkOut :: MonadIO m => Renderer -> [Font] -> [[Surface]] -> Texture
                   -> [Buffer] -> Source -> Bool -> Input -> S.StateT Waka m Bool 
 wkOut re fonts surfs mapTex muses source _ inp = do 
---  inp <- wkInput
   wk <- S.get
   let (imsWk,impWk,imuWk) = (ims wk,imp wk,imu wk)
   let isMusicOn = imsWk && not impWk 
@@ -60,7 +59,6 @@ wkOut re fonts surfs mapTex muses source _ inp = do
     _else  -> return ()
   delay delayTime
   return $ inp==Es
---  unless (inp==Es) $ wkLoop re fonts surfs newMapTex muses source
 
 textMode :: (MonadIO m) => Renderer -> [Font] -> [[Surface]] -> Texture 
                                             -> Input -> S.StateT Waka m ()
@@ -111,13 +109,14 @@ mapMode re fonts surfs mapTex inp = do
             = (chs wk,pln wk,mps wk,mrp wk,gmp wk,tsz wk) 
       textData = makeWkTextData wk
       chP = chsWk!!plnWk
-      (pdrCh,ppsCh,prpCh,pacCh,pimCh) = (cdr chP, cps chP, crp chP, cac chP, icm chP)
+      (pdrCh,ppsCh,prpCh,pacCh,pimCh) =
+                 (cdr chP, cps chP, crp chP, cac chP, icm chP)
       npdr = case inp of
                 Ri -> East
                 Up -> North
                 Lf -> West
                 Dn -> South
-                _  -> pdrCh
+                _x -> pdrCh
       npim = inp/=Rl && (inp==Ri || inp==Up || inp==Lf || inp==Dn || pimCh) 
       (nmps,(npps,nprp),iss) =
                charaMove True npim gmpWk mpsWk mrpWk tszWk npdr ppsCh prpCh 
@@ -129,11 +128,12 @@ mapMode re fonts surfs mapTex inp = do
       nmrp = if iss then nprp else mrpWk
       nwk = wk{mps=nmps,mrp=nmrp,chs=nchs,isc=iss}
   wkDraw re fonts surfs mapTex textData nwk
-  when iss $ liftIO $ putStrLn (show nmps ++ " " ++ show npps ++ " " ++show nprp)
+--  when iss $ liftIO $ putStrLn (show nmps ++ " " ++ show npps ++ " " ++show nprp++" "++ show iss)
   S.put nwk
 
 type MapPos = Pos
 type MapRPos = Pos
+type MapSize = Pos
 type ChaPos = Pos
 type ChaRPos = Pos
 type TileSize = CInt
@@ -142,13 +142,13 @@ type IsPlayer = Bool
 charaMove :: IsPlayer -> Bool -> GMap -> MapPos -> MapRPos -> TileSize -> Direction 
                     -> ChaPos -> ChaRPos -> (MapPos,(ChaPos,ChaRPos),Bool) 
 charaMove ip im gm mpos@(V2 x y) (V2 rx ry) ts dr cpos@(V2 a b) crps@(V2 p q) =  
-  let isFr = isFree gm
-      du = div ts 4 
+  let du = div ts 4 
       (V2 msx msy) = V2 (fromIntegral (length (head gm))) (fromIntegral (length gm))
+      isFr = isFree (V2 msx msy) gm
       (V2 vmsx vmsy) = visibleMapSize
       (V2 mpr mpd) = mpos + visibleMapSize - V2 1 1 --map pos right, map pos down
       canMove = im && case dr of
-        East -> (p==0 && isFr (V2 (a+1) b) 
+        East -> (p==0 && isFr (V2 (a+1) b) && a<11 
                       && (q==0 || (q>0 && isFr (V2 (a+1) (b+1))) 
                                || (q<0 && isFr (V2 (a+1) (b-1))))) || p/=0  
         North -> (q==0 && isFr (V2 a (b-1))
@@ -174,18 +174,19 @@ charaMove ip im gm mpos@(V2 x y) (V2 rx ry) ts dr cpos@(V2 a b) crps@(V2 p q) =
                   North -> tb > y || (tb==y && ntq==0)
                   West -> ta > x || (ta==x && ntp==0)
                   South -> tb < mpd || (tb==mpd && ntq==0)
-      isScroll = ip && case dr of
-                  East -> (x+vmsx < msx) && ((ta==x+vmsx-2 && ntp>0) || ta==x+vmsx-1)
-                  North -> (y > 0) && ((tb==y+1 && ntq<0) || tb==y)
-                  West -> (x > 0) && ((ta==x+1 && ntp<0) || ta==x)
-                  South -> (y+vmsy < msy) && ((tb==y+vmsy-2 && ntq>0) || tb==y+vmsy-1)
+      isScroll = ip && 
+           case dr of
+             East -> (x+vmsx < msx) && ((ta==x+vmsx-2 && ntp>0) || ta==x+vmsx-1)
+             North -> (y > 0) && ((tb==y+1 && ntq<0) || tb==y)
+             West -> (x > 0) && ((ta==x+1 && ntp<0) || ta==x)
+             South -> (y+vmsy < msy) && ((tb==y+vmsy-2 && ntq>0) || tb==y+vmsy-1)
       ncpos = if not ip || isInRect then V2 ta tb else cpos              
       ncrps = if not ip || isInRect then V2 ntp ntq else crps
       nmpos = if isInRect && isScroll then mpos + V2 da db else mpos
    in (nmpos,(ncpos,ncrps),isScroll) 
 
-isFree :: GMap -> ChaPos -> Bool
-isFree gm (V2 a b) = (a>=0 && b>=0) &&
+isFree :: MapSize -> GMap -> ChaPos -> Bool
+isFree (V2 msx msy) gm (V2 a b) = (a>=0 && b>=0) && (a<msx && b<msy-1) &&
     (let mProp = defaultMapProp!!read [(gm!!fromIntegral b)!!fromIntegral a]
       in mProp/=Bl)
 

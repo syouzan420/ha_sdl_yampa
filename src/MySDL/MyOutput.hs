@@ -15,7 +15,6 @@ import MyData (State(..),Active(..),Attr(..),Coding(..),Jumping(..),Dot,Input(..
               ,JBak,FrJp,delayTime,textFileName,textPosFile,dotFileName,jumpNameFile)
 import MyAction (beforeDraw,afterDraw,makeTextData)
 import MyLib (textToDots,dotsToText,jumpsToText)
-import MyEvent (inputEvent)
 import MyFile (fileRead,fileWrite)
 import MyCode (exeCode)
 import General (isLastElem)
@@ -31,17 +30,14 @@ type Dots = [Dot]
 type JBacks = [JBak]
 data CFile = CFile !HaText !FileNum !TextPos !Dots !Bool !JBacks
 
-myOut :: Renderer -> [Font] -> [Texture] -> Bool -> Input -> S.StateT State IO Bool 
-myOut re fonts itexs _ inp = do
+myOut :: Renderer -> [Font] -> [Texture] -> Bool -> (Input,Bool) 
+                                                -> S.StateT State IO Bool 
+myOut re fonts itexs _ (inp,isUpdateTps) = do
   st <- S.get
   let actSt = act st
-
-  st' <- S.get
-  let actSt' = act st'
-      isUpdateTps = tps actSt /= tps actSt'
-      nicr = isUpdateTps || icr actSt'
-      ncrc = if isUpdateTps then 0 else crc actSt'
-      bst = beforeDraw st'{act=actSt'{crc=ncrc,icr=nicr},cdn=(cdn st'){ipr=True}}
+      nicr = isUpdateTps || icr actSt
+      ncrc = if isUpdateTps then 0 else crc actSt
+      bst = beforeDraw st{act=actSt{crc=ncrc,icr=nicr},cdn=(cdn st){ipr=True}}
       bcdnSt = cdn bst
   S.put bst
 
@@ -54,8 +50,8 @@ myOut re fonts itexs _ inp = do
   
   cst' <- S.get
   let cactSt' = act cst'
-      isUpdateText = tex actSt /= tex cactSt' || icr actSt /= icr cactSt' || isUpdateTps 
-                         || inp==PKY || iup cst' || etx actSt /= etx cactSt' 
+      isUpdateText = tex actSt /= tex cactSt' || icr actSt /= icr cactSt' 
+          || isUpdateTps || inp==PKY || iup cst' || etx actSt /= etx cactSt' 
       isUpdateDraw = inp==PMO || inp==EXE || isUpdateText
       isOnlyMouse = inp==PMO && not isUpdateText
       textData = if isUpdateDraw then makeTextData cst' else []

@@ -242,7 +242,7 @@ textLengthLimit :: Int
 textLengthLimit = 300
 
 delayTime :: Word32
-delayTime = 3 
+delayTime = 5 
 
 cursorTime :: Int
-cursorTime = 60 
+cursorTime = 90 

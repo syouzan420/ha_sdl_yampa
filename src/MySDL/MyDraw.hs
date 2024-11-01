@@ -2,9 +2,9 @@
 module MySDL.MyDraw (myDraw,initDraw,textsDraw) where
 
 import SDL.Video (Renderer, Texture)
-import SDL.Video.Renderer (rendererDrawColor,clear,copy,copyEx,Rectangle(..),textureAlphaMod
-                          ,present,createTextureFromSurface,freeSurface,destroyTexture
-                          ,fillRect,drawPoint)
+import SDL.Video.Renderer (rendererDrawColor,clear,copy,copyEx,Rectangle(..)
+    ,present,createTextureFromSurface,freeSurface,destroyTexture
+    ,fillRect,drawPoint)
 import SDL (($=))
 import SDL.Vect (Point(P),V2(..))
 import SDL.Font (Font,blended)
@@ -67,7 +67,6 @@ drawShape re col siz (C (Cr False ps rd)) =
 drawShape re col _ (C (Cr True ps rd)) = fillCircle re ps rd col
 drawShape re col siz (D (Dt ps)) =
   if siz==1 then drawPoint re (P ps) else fillCircle re ps (siz-1) col
---drawShape _ _ _ _ = return ()
 
 dotsDraw :: (MonadIO m) => Renderer -> Pos -> [Dot] -> m () 
 dotsDraw re (V2 sx sy) = mapM_ (\(V2 x y,cn) -> do
@@ -117,7 +116,7 @@ textsDraw re fonts wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
       rpText2 = T.replace "\n" "　" tx
 
       lPos = snd$last pList
-      tx' = if fnum==0 then T.pack $ fst $ unzip $ filter (\(_,((b,_),_)) -> not b) (zip (T.unpack rpText2) pList) else tx
+      tx' = if fnum==0 then T.pack $ map fst $ filter (\(_,((b,_),_)) -> not b) (zip (T.unpack rpText2) pList) else tx
       pList' = if fnum==0 then filter (\((b,_),_)->not b) pList else pList
   when (tx'/=T.empty) $ do
         fontS <- case fnum of

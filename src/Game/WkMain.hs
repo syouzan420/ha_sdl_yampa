@@ -5,14 +5,15 @@ import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import SDL.Font (Font)
 import SDL.Input.Keyboard (stopTextInput)
+import FRP.Yampa (reactimate, identity)
 import Data.ObjectName (genObjectName)
 import MyData (textFileName)
 import MyFile (fileRead)
 import Game.WkData (initWaka)
-import Game.WkAction (startText)
+import Game.WkAction (startText,initInput,wkInput)
 import Game.WkVideo (withVideo)
 import Game.WkAudio2 (withWkAudio)
-import Game.WkLoop (wkLoop)
+import Game.WkOutput (wkOut)
 import Game.WkLoad (wkLoad)
 
 type FileNum = Int
@@ -26,4 +27,9 @@ runWaka fln sIndex fonts = do
     let newWaka = startText sIndex allText initWaka
     withWkAudio $ \muses -> do
       source <- genObjectName
-      S.runStateT (wkLoop renderer fonts surfs texture muses source) newWaka
+      S.runStateT (reactimate 
+                     initInput
+                     wkInput 
+                     (wkOut renderer fonts surfs texture muses source)
+                     identity
+                  ) newWaka

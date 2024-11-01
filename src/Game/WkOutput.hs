@@ -1,4 +1,4 @@
-module Game.WkLoop (wkLoop) where
+module Game.WkOutput (wkOut) where
 
 import qualified Control.Monad.State.Strict as S
 import Control.Monad (unless,when)
@@ -29,10 +29,10 @@ import Game.WkData (Waka(..),Input(..),IMode(..),Direction(..),Cha(..),Pos,GMap,
 
 --wkLoop :: MonadIO m => Renderer -> [Font] -> [[Surface]]
 --                                      -> [M.Music] -> S.StateT Waka m () 
-wkLoop :: MonadIO m => Renderer -> [Font] -> [[Surface]] -> Texture
-                                      -> [Buffer] -> Source -> S.StateT Waka m () 
-wkLoop re fonts surfs mapTex muses source = do 
-  inp <- wkInput
+wkOut :: MonadIO m => Renderer -> [Font] -> [[Surface]] -> Texture
+                  -> [Buffer] -> Source -> Bool -> Input -> S.StateT Waka m Bool 
+wkOut re fonts surfs mapTex muses source _ inp = do 
+--  inp <- wkInput
   wk <- S.get
   let (imsWk,impWk,imuWk) = (ims wk,imp wk,imu wk)
   let isMusicOn = imsWk && not impWk 
@@ -57,9 +57,10 @@ wkLoop re fonts surfs mapTex muses source = do
   case mdiWk of
     TXT -> textMode re fonts surfs newMapTex inp
     PLY -> mapMode re fonts surfs newMapTex inp
-    _ -> return ()
+    _else  -> return ()
   delay delayTime
-  unless (inp==Es) $ wkLoop re fonts surfs newMapTex muses source
+  return $ inp==Es
+--  unless (inp==Es) $ wkLoop re fonts surfs newMapTex muses source
 
 textMode :: (MonadIO m) => Renderer -> [Font] -> [[Surface]] -> Texture 
                                             -> Input -> S.StateT Waka m ()

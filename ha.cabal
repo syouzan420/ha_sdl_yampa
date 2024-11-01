@@ -34,9 +34,9 @@ library
       Game.WkEvent
       Game.WkLib
       Game.WkLoad
-      Game.WkLoop
       Game.WkMain
       Game.WkMap
+      Game.WkOutput
       Game.WkVideo
       General
       Mana.Mana

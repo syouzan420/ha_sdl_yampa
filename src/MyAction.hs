@@ -15,7 +15,6 @@ import MyData (IsFormat,TextPos,TextData,Jump,FrJp,Mgn,Size
 
 type Index = Int
 type FilePos = Int
-type IsDialog = Bool
 
 myAction :: State -> State
 myAction st = st
@@ -42,8 +41,8 @@ makeTexts :: Index -> IsFormat -> WMode -> FilePos -> TextPos ->
                               Size -> Mgn -> Attr -> Text -> Text -> TextData 
 makeTexts ind ifmSt wmdSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt = 
   case uncons texSt of
-    Nothing -> if texSt=="" && tpsSt==0 
-                  then [(True,etxSt,atrSt,makePList wmdSt wszSt mgnSt atrSt etxSt)] else []
+    Nothing -> [(True,etxSt,atrSt,makePList wmdSt wszSt mgnSt atrSt etxSt) 
+                | texSt=="" && tpsSt==0] 
     Just (ch,tailTx) ->  
       let (natr,(ptx,pxs)) 
             | ifmSt = if ch==';' then exeAttrCom wmdSt fpsSt ind (changeAtr atrSt{ite=False} tailTx) 

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Game.WkAction (wkInput,startText,makeWkTextData) where
+module Game.WkAction (wkInput,initInput,startText,makeWkTextData) where
 
 import qualified Control.Monad.State.Strict as S
 import Control.Monad.IO.Class (MonadIO)
@@ -10,26 +10,33 @@ import qualified Data.Text as T
 import SDL.Input.Keyboard.Codes
 import MySDL.MyInput (myInput,InpRes(..))
 import Data.Maybe (fromMaybe)
+import FRP.Yampa (DTime)
 import qualified MyData as MD 
 import MyAction (makeTexts)
 import Game.WkData (Waka(..),Input(..),windowSize)
 
-wkInput :: (MonadIO m) => m Input
-wkInput = do
+
+initInput :: MonadIO m => S.StateT Waka m Input
+initInput = return No
+
+--wkInput :: (MonadIO m) => m Input
+wkInput :: MonadIO m => Bool -> S.StateT Waka m (DTime, Maybe Input)
+wkInput _ = do
     InpRes kc _ _ _ _ _ ir <- myInput
-    return $ if ir then Rl else case kc of
-      KeycodeEscape -> Es
-      KeycodeSpace -> Sp
-      KeycodeK -> Up
-      KeycodeUp -> Up
-      KeycodeJ -> Dn
-      KeycodeDown -> Dn
-      KeycodeH -> Lf
-      KeycodeLeft -> Lf
-      KeycodeL -> Ri
-      KeycodeRight -> Ri
-      KeycodeReturn -> Rt
-      _ -> No
+    let inp = if ir then Rl else case kc of
+          KeycodeEscape -> Es
+          KeycodeSpace -> Sp
+          KeycodeK -> Up
+          KeycodeUp -> Up
+          KeycodeJ -> Dn
+          KeycodeDown -> Dn
+          KeycodeH -> Lf
+          KeycodeLeft -> Lf
+          KeycodeL -> Ri
+          KeycodeRight -> Ri
+          KeycodeReturn -> Rt
+          _else -> No
+    return (1,Just inp)
 
 startText :: Text -> Text -> Waka -> Waka 
 startText sIndex allText wk = do
@@ -49,7 +56,7 @@ makeIndex (tx:txs) =
 getText :: [Text] -> [Text] -> (Text,[Text])
 getText [] acc = (T.unlines acc, [])
 getText (tx:txs) acc =
-  let (ind,ch) = fromMaybe (T.empty,'0') (T.unsnoc tx)
+  let (_,ch) = fromMaybe (T.empty,'0') (T.unsnoc tx)
    in if ch==':' then (T.unlines acc,tx:txs) 
                  else getText txs (acc++[tx]) 
 

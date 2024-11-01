@@ -15,10 +15,10 @@ import SDL.Input.Keyboard (startTextInput,stopTextInput)
 import SDL.Input.Keyboard.Codes
 import FRP.Yampa (DTime)
 
-initInput :: S.StateT State IO Input 
-initInput = return NON
+initInput :: S.StateT State IO (Input,Bool) 
+initInput = return (NON,False)
 
-inputEvent :: Bool -> S.StateT State IO (DTime, Maybe Input)
+inputEvent :: Bool -> S.StateT State IO (DTime, Maybe (Input,Bool))
 inputEvent _ = do
   st <- S.get
   let (actSt,cdnSt) = (act st, cdn st) 
@@ -199,9 +199,10 @@ inputEvent _ = do
         | isMousePressed = PMO
         | otherwise = NON
       nactSt = actSt{tex=ntex,etx=netx,dts=ndts,tps=ntps}
+      isTpsUpdate = tpsSt /= ntps
       nst = st{act=nactSt,cdn=cdnSt{cod=ncod},com=ncom,atr=natr,emd=nemd,wmd=nwmd,cpl=ncpl,ifm=nifm,isk=nisk}
   S.put nst
   when isToIns $ startTextInput (Rect 0 0 50 50)
   when isToNor stopTextInput
-  return (1,Just ninp)
+  return (1,Just (ninp,isTpsUpdate))
 

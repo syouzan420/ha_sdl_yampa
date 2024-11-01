@@ -5,6 +5,7 @@ import qualified Control.Monad.State.Strict as S
 import Control.Monad (when)
 import qualified Data.Text as T
 import Data.Maybe (fromMaybe)
+import Data.Functor ((<&>))
 import Data.List.Split (splitOn)
 import Linear.V2 (V2(..))
 import MyData (State(..),Active(..),Coding(..),Code
@@ -21,7 +22,7 @@ exeCode code = do
   let cds = words code 
       (arg,funcName) = (init cds, last cds)
   fromMaybe idf (lookup funcName funcs) arg -- idf is a function to do nothing 
-  iprSt <- S.get >>= return.ipr.cdn
+  iprSt <- S.get <&> (ipr.cdn)
   when iprSt $ addTex "OK." 
 
 addTex :: T.Text -> StateIO
@@ -90,12 +91,13 @@ drawDot [a,b] = putDraw (D (Dt (V2 (read a) (read b))))
 drawDot _  = return () 
 
 drawGrid :: [String] -> StateIO
-drawGrid args = when (length args == 6) $ do 
-    let [a,b,c,d,e,f] = map read args 
-        dw = e `div` a
+drawGrid args = case map read args of 
+  [a,b,c,d,e,f] -> do 
+    let dw = e `div` a
         dh = f `div` b
     mapM_ ((\x -> putDraw (L (Li (V2 (c+x) d) (V2 (c+x) (d+f))))) . (dw *)) [0..a]
     mapM_ ((\y -> putDraw (L (Li (V2 c (d+y)) (V2 (c+e) (d+y))))) . (dh *)) [0..b]
+  _else -> return ()
 
 drawImage :: [String] -> StateIO
 drawImage [a,b,c,d,e,f] = do 
@@ -113,6 +115,7 @@ load _ = return ()
 waka :: [String] -> StateIO
 waka [a] = S.get >>=
     (\st -> return st{cdn=(cdn st){msg=[a,"runWaka"],ipr=False}}) >>= S.put
+waka _ = return ()
 
 run :: [String] -> StateIO
 run _ = do
@@ -121,7 +124,6 @@ run _ = do
       dfnSt = (dfn.cdn) st
       manas = map (taiyouMn.evalCode (preDef++[(User,userDef++dfnSt)])) codes
       ioCodes = map fst $ filter (\(_,y) -> y==Io) manas
-      --results = map fst $ filter (\(_,y) -> y/=Io) manas
   S.put st{cdn=(cdn st){cod=ioCodes, msg=["codeExe"]}}
 
 strYo :: [(String,Yo)]
@@ -135,7 +137,8 @@ ha [a,b] = do
   st <- S.get
   let (lfts,rits) = (splitOn "," a, splitOn "," b)
       (tgts,pyos) = break (=="::") lfts
-      yos = if null pyos then gessYos tgts (T.pack (unwords rits)) else map readYo (tail pyos)
+      yos = if null pyos then gessYos tgts (T.pack (unwords rits)) 
+                         else map readYo (tail pyos)
       tgtStr = unwords tgts
       cdnSt = cdn st
       dfnSt = dfn cdnSt 
@@ -147,5 +150,5 @@ ha [a,b] = do
 ha _ = return () 
 
 gessYos :: [String] -> T.Text -> [Yo]
-gessYos lfs rt = [] 
+gessYos _lfs _rt = [] 
 

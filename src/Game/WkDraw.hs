@@ -24,8 +24,6 @@ import Game.WkData (Waka(..),Size,Pos,GMap,Direction(..),Cha(..),mapUpLeftPos,pl
 import Game.WkLib (cosList,shiftList)
 import MyData (TextData,WMode(..))
 
-import Debug.Trace (trace)
-
 type MapSize = Size
 type TileSize = CInt
 type PlayerNum = Int
@@ -46,7 +44,7 @@ wkDraw re fonts surfs texture textData wk = do
   when (ipl wk) $ do
       playerDraw re (surfs!!1) (tsz wk) plnWk plyWk mpsWk mrpWk iscWk acoWk
   textsDraw re fonts T True False (tps wk) textData
-  trace ("tsz:"<>show tszWk<>" mps:"<>show mpsWk<>" mrp:"<>show mrpWk<>" aco:"<>show acoWk) $ present re
+  present re
 
 playerDraw :: (MonadIO m) => Renderer -> [Surface] -> 
                   TileSize -> PlayerNum -> Cha -> MapPos -> MapRPos ->Bool -> Int -> m ()

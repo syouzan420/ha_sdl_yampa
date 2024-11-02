@@ -1,17 +1,21 @@
 module Game.WkLoad (wkLoad) where
 
 import qualified SDL.Image as I
+import qualified SDL.Font as F
 import SDL.Video.Renderer (Surface)
-import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO,liftIO)
 import System.Directory (doesFileExist)
-import MyFile (fileRead)
-import Game.WkData (mapRoot,charaRoot,blockRoot,objectRoot,enemyRoot)
+import Game.WkData (mapRoot,charaRoot,blockRoot,objectRoot,enemyRoot
+                   ,fontSize,fontFiles)
 
-wkLoad :: MonadIO m => m [[Surface]]
+wkLoad :: MonadIO m => m ([F.Font],[[Surface]])
 wkLoad = do
+  fonts <- loadFonts fontSize fontFiles
   surfs <- mapM loadImages [mapRoot,charaRoot,enemyRoot,objectRoot,blockRoot]
-  return surfs 
+  return (fonts,surfs) 
+
+loadFonts :: MonadIO m => F.PointSize -> [FilePath] -> m [F.Font]
+loadFonts fs = mapM (`F.load` fs)
 
 loadImages :: MonadIO m => FilePath -> m [Surface]
 loadImages = loadImages' 0

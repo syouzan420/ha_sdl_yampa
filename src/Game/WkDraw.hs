@@ -20,7 +20,8 @@ import qualified Data.Vector.Storable.Mutable as VM
 import Data.Word (Word8)
 import Data.List (transpose)
 import MySDL.MyDraw (initDraw,textsDraw)
-import Game.WkData (Waka(..),Size,Pos,GMap,Direction(..),Cha(..),mapUpLeftPos,plDelay)
+import Game.WkData (Waka(..),Size,Pos,GMap,Direction(..),Cha(..)
+                   ,fontSize,mapUpLeftPos,plDelay)
 import Game.WkLib (cosList,shiftList)
 import MyData (TextData,WMode(..))
 
@@ -43,7 +44,7 @@ wkDraw re fonts surfs texture textData wk = do
       mapDraw re (head surfs) (gmp wk) mszWk tszWk mpsWk mrpWk acoWk
   when (ipl wk) $ do
       playerDraw re (surfs!!1) (tsz wk) plnWk plyWk mpsWk mrpWk iscWk acoWk
-  textsDraw re fonts T True False (tps wk) textData
+  textsDraw re fonts fontSize T True False (tps wk) textData
   present re
 
 playerDraw :: (MonadIO m) => Renderer -> [Surface] -> 

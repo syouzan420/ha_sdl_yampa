@@ -3,7 +3,6 @@ module Game.WkMain (runWaka) where
 import qualified Control.Monad.State.Strict as S
 import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
-import SDL.Font (Font)
 import SDL.Input.Keyboard (stopTextInput)
 import FRP.Yampa (reactimate, identity)
 import Data.ObjectName (genObjectName)
@@ -18,10 +17,10 @@ import Game.WkLoad (wkLoad)
 
 type FileNum = Int
 
-runWaka :: (MonadIO m,MonadFail m) => FileNum -> Text -> [Font] -> m () 
-runWaka fln sIndex fonts = do 
+runWaka :: (MonadIO m,MonadFail m) => FileNum -> Text -> m () 
+runWaka fln sIndex = do 
   stopTextInput
-  surfs <- wkLoad
+  (fonts,surfs) <- wkLoad
   allText <- fileRead (textFileName++show fln++".txt")
   withVideo $ \(renderer,texture) -> do
     let newWaka = startText sIndex allText initWaka

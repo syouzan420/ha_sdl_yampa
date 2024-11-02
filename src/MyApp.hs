@@ -3,7 +3,7 @@ module MyApp(appMain) where
 import qualified Control.Monad.State.Strict as S
 import SDL.Input.Keyboard (stopTextInput)
 import FRP.Yampa (identity,reactimate)
-import MySDL.MyLoad (myLoad)
+import MySDL.MyLoad (myLoad,Loaded(..))
 import MySDL.MyOutput (myOut)
 import MySDL.MyInit (withMyInit)
 import MySDL.MyInitVideo (withMyVideo)
@@ -14,7 +14,7 @@ import MyData (initState,initActive,initAttr,initJumping
 appMain :: IO ()
 appMain =
   withMyInit $ do
-    (fonts,sur,text,(fpos,tpos),dots,jumps) <- myLoad
+    Loaded fonts sur text (fpos,tpos) dots jumps <- myLoad
     withMyVideo sur $
       \(renderer,itexs) -> do
         let newActive = initActive{tex=text,dts=dots,fps=fpos,tps=tpos}

@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-module MyData (Pos,Color,Mgn,Size,PList,TextPos,TextData,IsFormat,Dot,Code,Jump,FrJp,JBak
+module MyData (Pos,Color,Mgn,Size,PList,TextPos,TextData,IsFormat,Dot,Code
+              ,Jump,FrJp,JBak,PointSize
               ,Dt(..),Li(..),Rc(..),Cr(..),Shp(..),Drw(..),Img(..)
               ,Modif(..),State(..),Active(..),Attr(..),Coding(..),Rubi(..),Jumping(..)
               ,WMode(..),EMode(..),FMode(..),Input(..)
@@ -121,6 +122,7 @@ data Jumping = Jumping{dta :: ![Text], jps :: ![Jump], fjp :: ![FrJp]
 data Rubi = Rubi{rps :: !Pos, rwd :: !CInt, tsz :: !PointSize, tlw :: !CInt, spr :: !CInt} deriving (Eq,Show)
 
 
+
 title :: T.Text
 title = "HA"
 
@@ -159,16 +161,16 @@ windowSize :: V2 CInt
 windowSize = V2 winSizeX winSizeY 
 
 fontSize :: PointSize
-fontSize = 24 
+fontSize = 20 
 
 rubiSize :: PointSize
-rubiSize = 10 
+rubiSize = 9 
 
 dotSize :: CInt
 dotSize = 5
 
 initLetterWidth, initLineWidth :: CInt
-initLetterWidth = 26; initLineWidth = 36
+initLetterWidth = 24; initLineWidth = 32
 
 margins :: V4 CInt
 margins = V4 20 30 20 30 -- right top left bottom 
@@ -207,8 +209,8 @@ initJumping :: Jumping
 initJumping = Jumping {dta = [], jps = [], fjp = [], jbk = [], sjn = -1}
 
 initRubi :: Rubi
-initRubi = Rubi{rps = initTatePos, rwd = fromIntegral fontSize, tsz = rubiSize, tlw = initLetterWidth
-               ,spr = 0}
+initRubi = Rubi{rps = initTatePos, rwd = fromIntegral fontSize, tsz = rubiSize
+               ,tlw = initLetterWidth, spr = 0}
 
 -- COLOR
 

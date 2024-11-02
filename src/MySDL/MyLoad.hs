@@ -1,5 +1,5 @@
 {-#LANGUAGE OverloadedStrings #-}
-module MySDL.MyLoad (myLoad) where
+module MySDL.MyLoad (myLoad,Loaded(..)) where
 
 import qualified SDL.Font as F
 import qualified SDL.Image as I
@@ -10,7 +10,9 @@ import MyFile (fileRead)
 import MyData (Dot,Jump,fontSize,fontFiles,imageFiles,textFileName,textPosFile,dotFileName,jumpNameFile)
 import MyLib (textToDots,textToJumps)
 
-myLoad :: IO ([F.Font],[Surface],T.Text,(Int,Int),[Dot],[Jump])
+data Loaded = Loaded ![F.Font] ![Surface] !T.Text !(Int,Int) ![Dot] ![Jump]  
+
+myLoad :: IO Loaded 
 myLoad = do
   fonts <- loadFonts fontSize fontFiles
   imageS <- loadImages imageFiles
@@ -22,7 +24,7 @@ myLoad = do
   dotsText <- loadText dotFileName (fst tpos)
   let dots = if dotsText==T.empty then [] else textToDots (T.words dotsText)
       jumps = if jumpsText==T.empty then [] else textToJumps (T.words jumpsText)
-  return (fonts,imageS,texts,tpos,dots,jumps)
+  return $ Loaded fonts imageS texts tpos dots jumps
 
 loadImages :: [FilePath] -> IO [Surface]
 loadImages = mapM I.load

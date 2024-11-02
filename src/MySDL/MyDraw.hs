@@ -16,7 +16,7 @@ import qualified Data.Text as T
 import Data.Text (pack)
 import General (getIndex)
 import MyData (State(..),Active(..),Attr(..),Jumping(..),WMode(..),FMode(..)
-              ,IsFormat,Dot,Pos,TextPos,TextData
+              ,IsFormat,Dot,Pos,TextPos,TextData,PointSize
               ,Dt(..),Li(..),Rc(..),Cr(..),Shp(..),Drw(..),Img(..),Color
               ,fontSize,cursorColor,backColor,initTatePos,initYokoPos
               ,dotSize,colorPallet,statusPos,imageNames)
@@ -33,7 +33,7 @@ myDraw re fonts itex textData isOnlyMouse st = do
       iniPos = if wmdSt==T then initTatePos else initYokoPos
   initDraw re
   statusDraw re (fonts!!1) st 
-  unless isOnlyMouse $ textsDraw re fonts wmdSt ifmSt icrSt tpsSt textData
+  unless isOnlyMouse $ textsDraw re fonts fontSize wmdSt ifmSt icrSt tpsSt textData
   when (tpsSt==0 && icrSt && not ifmSt) $ cursorDraw re (iniPos+scrAt) wmdSt (fromIntegral fontSize) 
   dotsDraw re scrAt dtsSt
   myDrawing re drwSt
@@ -103,12 +103,12 @@ statusDraw re font st = do
   freeSurface fontS
   
 
-textsDraw :: (MonadIO m) => Renderer -> [Font] -> WMode 
+textsDraw :: (MonadIO m) => Renderer -> [Font] -> PointSize -> WMode 
         -> IsFormat -> IsCursor -> TextPos -> TextData -> m () 
-textsDraw _ _ _ _ _ _ [] = return () 
-textsDraw re fonts wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
+textsDraw _ _ _ _ _ _ _ [] = return () 
+textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
   let (scrAt,fszAt,fcoAt,fmdAt) = (scr nat,fsz nat,fco nat,fmd nat)
-      ofs = fromIntegral fontSize
+      ofs = fromIntegral dfsz 
       fs = fromIntegral fszAt
       fnum = case fmdAt of Min -> 0; Got -> 1; Ost -> 2
       nscr = if null xs then scrAt else let (_,_,nxtAtr,_) = head xs in scr nxtAtr
@@ -148,7 +148,7 @@ textsDraw re fonts wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
         destroyTexture fontT2
         freeSurface fontS2
   when (iCur && icrSt && not ifmSt) $ cursorDraw re (lPos+nscr) wmdSt fs 
-  textsDraw re fonts wmdSt ifmSt icrSt tpsSt xs
+  textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt xs
 
 initDraw :: MonadIO m => Renderer -> m ()
 initDraw re = do

@@ -88,7 +88,7 @@ myOut re fonts itexs _ (inp,isUpdateTps) = do
         JumpFile -> jumpFile nfjp jbkAt nsjn fpsSt cst' 
         JumpBackFile -> jumpBackFile jbkAt fpsSt cst'
         _other -> return (CFile ((tex.act) cst') fpsSt ((tps.act) cst') ((dts.act) cst') False jbkAt)
-  when (fc==RunWaka) $ runWaka wkInitFile "initWaka" fonts
+  when (fc==RunWaka) $ runWaka wkInitFile "initWaka"
   let nactSt = cactSt'{tex=ntex,dts=ndts,fps=nfps,tps=ntps}
   let catrSt' = atr cst'
   let nst = afterDraw cst'{act=nactSt,cdn=(cdn cst'){msg=[]},atr=catrSt'{scr=nscr,jmp=(jmp catrSt'){jps=njps,fjp=nfjp,jbk=njbk,sjn=nsjn}},iup=niup}

@@ -156,6 +156,9 @@ visibleMapSize = V2 8 6
 delayTime :: Word32
 delayTime = 80 
 
+fontFiles :: [FilePath]
+fontFiles = map ("fonts/"<>) ["oshide.otf","marugo.TTC"]
+
 mapRoot :: FilePath
 mapRoot = "./images/maps/mp"
 

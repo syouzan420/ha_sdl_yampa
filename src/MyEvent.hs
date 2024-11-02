@@ -204,5 +204,5 @@ inputEvent _ = do
   S.put nst
   when isToIns $ startTextInput (Rect 0 0 50 50)
   when isToNor stopTextInput
-  return (1,Just (ninp,isTpsUpdate))
+  return (1,Just (ninp,(isTpsUpdate||ised)))
 

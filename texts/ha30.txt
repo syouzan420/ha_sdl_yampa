@@ -1,0 +1,18 @@
+令和6 11月3日
+[17:14]
+
+The Yampa Arcade
+
+ABSTRACT
+
+Simulated wordls are a common (and highly lucrative) application domain that stretches from detailed simulation of physical systems to elaborate video game fantasies.
+
+シミュレートされた世界といふものは 物理系の詳細なものから手の込んだビデオゲームまで様々な領域に跨ってゐてよく利用されてゐる(そして かなり使へる)
+
+We believe that Functional Reactive Programming (FRP) provides just the right level of functionality to develop simulated worlds in a concise, clear and modular way.
+
+函數型リアクティヴ プログラム(FRP)は そのやうなシミュレート世界を 簡潔に 明瞭に モジュール化した形で つくり出すのに適してゐると 我々は確信してゐる
+
+We demonstrate the use of FRP in this domain by presenting an implementation of the classic "Space Invaders" game in Yampa, our most recent Haskell-embedded incarnation of FRP.
+
+ここでは 我々が最近Haskelで構築したFRPの Yampa を使ひ 「スペース インヴェーダー」ゲームを實装することで FRPを實際に使用して その威力を示さうと思ふ

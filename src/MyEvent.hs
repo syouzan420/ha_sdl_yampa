@@ -25,7 +25,7 @@ inputEvent _ = do
       (texSt,etxSt,dtsSt,tpsSt,dfnSt,comSt,wszSt,mgnSt,atrSt,emdSt,wmdSt,cplSt,ifmSt,iskSt)
         = (tex actSt,etx actSt,dts actSt,tps actSt,dfn cdnSt
           ,com st,wsz st,mgn st,atr st,emd st,wmd st,cpl st,ifm st,isk st)
-  InpRes kc md it mps isc ised ir <- myInput  -- md: keyModifier ('a'-alt, 'c'-control, 's'-shift, ' '-nothing)
+  InpRes kc md it mps isc ised _ <- myInput  -- md: keyModifier ('a'-alt, 'c'-control, 's'-shift, ' '-nothing)
   let isKeyPressed = kc/=KeycodeUnknown
       isMousePressed = mps/=V2 (-1) (-1)
       isQuit = kc==KeycodeEscape   -- ESC Key
@@ -90,9 +90,9 @@ inputEvent _ = do
                   KeycodeR -> ";rb "
                   _other   -> T.empty
 
-      (fm,lw,fjpAt,fszAt,V2 ww wh,V4 mr mt ml mb,scrAt@(V2 sx sy)) =
+      (fm,lw,fjpAt,fszAt,ltwAt,lnwAt,V2 ww wh,V4 mr mt ml mb,scrAt@(V2 sx sy)) =
          (fmd atrSt,lnw atrSt,(fjp.jmp) atrSt
-         ,fsz atrSt,wszSt,mgnSt,scr atrSt)
+         ,fsz atrSt,ltw atrSt,lnw atrSt,wszSt,mgnSt,scr atrSt)
       tLen = T.length texSt
       seeLines = fromIntegral$if wmdSt==T then (ww-mr-ml) `div` lw else (wh-mt-mb) `div` lw
       tpsPreLine = tpsForRelativeLine wmdSt wszSt mgnSt atrSt texSt (-1) tpsSt
@@ -124,12 +124,21 @@ inputEvent _ = do
         | isFontPlus = fszAt + 1
         | isFontMinus = fszAt - 1
         | otherwise = fszAt
+      nltw
+        | isFontPlus = ltwAt + 1
+        | isFontMinus = ltwAt - 1
+        | otherwise = ltwAt
+      nlnw
+        | isFontPlus = lnwAt + 1
+        | isFontMinus = lnwAt - 1
+        | otherwise = lnwAt
       natr
         | isTglDir = if wmdSt==T then atrSt{gps=initYokoPos,scr=V2 0 0} 
                                  else atrSt{gps=initTatePos,scr=V2 0 0} 
         | isTglOsd = if fm==Ost then atrSt{fmd=Got} else atrSt{fmd=Ost}
         | isTglMin = if fm==Min then atrSt{fmd=Got} else atrSt{fmd=Min}
-        | otherwise = atrSt{scr=nscr,jmp=(jmp atrSt){sjn=nsjn},fsz=nfsz}
+        | otherwise = atrSt{scr=nscr,jmp=(jmp atrSt){sjn=nsjn},fsz=nfsz
+                           ,ltw=nltw,lnw=nlnw}
       netx 
         | ised = it 
         | isIns && not ised && it/=T.empty = T.empty
@@ -204,5 +213,5 @@ inputEvent _ = do
   S.put nst
   when isToIns $ startTextInput (Rect 0 0 50 50)
   when isToNor stopTextInput
-  return (1,Just (ninp,(isTpsUpdate||ised)))
+  return (1,Just (ninp,isTpsUpdate||ised))
 

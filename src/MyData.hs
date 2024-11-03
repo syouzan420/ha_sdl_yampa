@@ -43,8 +43,8 @@ data WMode = T | Y deriving (Eq,Show) -- writing mode
 data EMode = Nor | Ins deriving (Eq,Show) -- edit mode --Normal Insert
 data FMode = Min | Got | Ost deriving (Eq, Ord, Show) -- font mode
 data Input = NON | PKY | PMO | NFL | LFL | LPR | LRF | JMP | JBK | EXE | QIT
-                                                               deriving (Eq, Show)
--- nothingPressed | isKeyPressed | isMousePressed | isNewFile | isLoadFile | isLoadPrevFile | isLoadRecentFile | isJump | isJBack | isExeCode | isQuit
+                                                              deriving (Eq, Show)
+-- nothingPressed | isKeyPressed | isMousePressed | isNewFile | isLoadFile | isLoadPrevFile | isLoadRecentFile | isJump | isJBack | isFontPlus | isFontMinus | isExeCode | isQuit
 
 newtype Dt = Dt Pos deriving (Eq,Show)   --Dot: position
 data Li = Li !Pos !Pos deriving (Eq,Show)  --Line : start_position, end_position

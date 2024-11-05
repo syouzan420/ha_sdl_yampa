@@ -22,21 +22,24 @@ initInput = return No
 --wkInput :: (MonadIO m) => m Input
 wkInput :: MonadIO m => Bool -> S.StateT Waka m (DTime, Maybe Input)
 wkInput _ = do
-    InpRes kc _ _ _ _ _ ir <- myInput
-    let inp = if ir then Rl else case kc of
-          KeycodeEscape -> Es
-          KeycodeSpace -> Sp
-          KeycodeK -> Up
-          KeycodeUp -> Up
-          KeycodeJ -> Dn
-          KeycodeDown -> Dn
-          KeycodeH -> Lf
-          KeycodeLeft -> Lf
-          KeycodeL -> Ri
-          KeycodeRight -> Ri
-          KeycodeReturn -> Rt
-          _else -> No
-    return (1,Just inp)
+  evInput <- myInput
+  case evInput of
+    Nothing -> return (1,Nothing)
+    Just (InpRes kc _ _ _ _ _ ir) -> do 
+      let inp = if ir then Rl else case kc of
+            KeycodeEscape -> Es
+            KeycodeSpace -> Sp
+            KeycodeK -> Up
+            KeycodeUp -> Up
+            KeycodeJ -> Dn
+            KeycodeDown -> Dn
+            KeycodeH -> Lf
+            KeycodeLeft -> Lf
+            KeycodeL -> Ri
+            KeycodeRight -> Ri
+            KeycodeReturn -> Rt
+            _else -> No
+      return (1,Just inp)
 
 startText :: Text -> Text -> Waka -> Waka 
 startText sIndex allText wk = do

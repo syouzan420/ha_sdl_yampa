@@ -22,7 +22,7 @@ inputEvent :: Bool -> S.StateT State IO (DTime, Maybe (Input,Bool))
 inputEvent _ = do
   evInput <- myInput
   case evInput of
-    Nothing -> return (1,Nothing)
+    Nothing -> return (1,Just (NON,False))
 -- md: keyModifier ('a'-alt, 'c'-control, 's'-shift, ' '-nothing)
     Just (InpRes kc md it mps isc ised _) -> do
       st <- S.get

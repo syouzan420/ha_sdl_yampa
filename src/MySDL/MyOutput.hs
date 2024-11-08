@@ -66,7 +66,9 @@ myOut re fonts itexs _ (inp,isUpdateTps) = do
       tFjp = if isLoadTgt then read (last (init msgSt)) else 0
       isRunWaka = isLastElem msgSt "runWaka"
       wkInitFile = if isRunWaka then read (last (init msgSt)) else 0
+
   when isUpdateDraw $ myDraw re fonts itexs textData isOnlyMouse (beforeDraw cst')
+
   let fc
        | inp==NFL = NewFile
        | inp==LFL = LoadNextFile
@@ -88,11 +90,15 @@ myOut re fonts itexs _ (inp,isUpdateTps) = do
         JumpFile -> jumpFile nfjp jbkAt nsjn fpsSt cst' 
         JumpBackFile -> jumpBackFile jbkAt fpsSt cst'
         _other -> return (CFile ((tex.act) cst') fpsSt ((tps.act) cst') ((dts.act) cst') False jbkAt)
+
   when (fc==RunWaka) $ runWaka wkInitFile "initWaka"
+
   let nactSt = cactSt'{tex=ntex,dts=ndts,fps=nfps,tps=ntps}
   let catrSt' = atr cst'
   let nst = afterDraw cst'{act=nactSt,cdn=(cdn cst'){msg=[]},atr=catrSt'{scr=nscr,jmp=(jmp catrSt'){jps=njps,fjp=nfjp,jbk=njbk,sjn=nsjn}},iup=niup}
+
   delay delayTime
+
   S.put nst 
   if inp==QIT then do 
     fileWriteR fpsSt nst

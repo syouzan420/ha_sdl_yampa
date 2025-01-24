@@ -8,7 +8,7 @@ import Foreign.C.Types (CInt)
 import SDL.Vect (V2(..),V4(..))
 import Data.Maybe(fromMaybe)
 import Data.List(elemIndex)
-import MyLib (breakText,nextPos)
+import MyLib (breakText,breakLine,nextPos)
 import MyData (IsFormat,TextPos,TextData,Jump,FrJp,Mgn,Size
               ,State(..),Active(..),Attr(..),Rubi(..),Jumping(..),WMode(..)
               ,rubiSize,textLengthLimit,linkColor,selectColor,fontColor,cursorTime)
@@ -42,7 +42,8 @@ makeTextData st =
 makeTexts :: Index -> IsFormat -> WMode -> FilePos -> TextPos ->
                               Size -> Mgn -> Attr -> Text -> Text -> TextData 
 makeTexts ind ifmSt wmdSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt = 
-  case uncons texSt of
+  let texSt' = if ifmSt then replaceText texSt else texSt 
+   in case uncons texSt' of
     Nothing -> [(True,etxSt,atrSt,makePList wmdSt wszSt mgnSt atrSt etxSt) 
                 | texSt=="" && tpsSt==0] 
     Just (ch,tailTx) ->  
@@ -50,8 +51,8 @@ makeTexts ind ifmSt wmdSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt =
             | ifmSt = case ch of
                ';'-> exeAttrCom wmdSt fpsSt ind (changeAtr atrSt{ite=False} tailTx) 
                _  -> if cnm atrSt/=T.empty 
-                      then exeAttrCom wmdSt fpsSt ind (atrSt{ite=False},texSt)
-                      else (atrSt,T.break (==';') texSt)
+                      then exeAttrCom wmdSt fpsSt ind (atrSt{ite=False},texSt')
+                      else (atrSt,T.break (==';') texSt')
             | otherwise = (atrSt,(texSt,T.empty))
           tll = textLengthLimit
           (ptx2,pxs2) = if T.length ptx>tll 
@@ -91,6 +92,9 @@ makePList wm ws mg at tx =
                      in ((ihf,irt),V2 (if ihft then ox+qtw else ox) (if ihft then oy-qtw else oy))
                           :makePList wm ws mg at{gps=npos} xs
 
+replaceText ::Text -> Text
+replaceText = T.replace ">" ";qu "
+
 changeAtr :: Attr -> Text -> (Attr, Text)
 changeAtr attr tx = 
   let (ncid, (cm, rtx)) = getCid tx
@@ -101,6 +105,7 @@ getCid :: Text -> (Int, (Text,Text))
 getCid tx =
   let (cm,rtx) = T.break (==' ') tx
       ncid = case cm of
+               "qu" -> 1
                "rb" -> 2 
                "jtg" -> 1
                "jp" -> 3
@@ -115,9 +120,17 @@ exeAttrCom wmdSt fpsSt tpsSt (at,tx) =
         ,dta jmpAt,jps jmpAt,fjp jmpAt,sjn jmpAt,cnm at,cid at) 
       (Rubi rpsRb rwdRb tszRb tlwRb sprRb) = rbiAt
       tailTx = T.tail tx
-      (ttx,rtx) = if cidAt>0 then breakText tailTx  else T.break (==';') tailTx
+      (ttx,rtx)
+        | cidAt>0 = case cnmAt of
+                      "qu" -> breakLine tailTx
+                      _    -> breakText tailTx
+        | otherwise = T.break (==';') tailTx
       tln = fromIntegral (T.length ttx)
       natr = case cnmAt of
+        "qu" -> case cidAt of
+                  1 -> at{fco=selectColor}
+                  0 -> at{fco=fontColor}
+                  _ -> at
         "rb" -> case cidAt of
                   2 -> at{rbi=rbiAt{rps=gpsAt,rwd=ltwAt*tln}}
                   1 -> let fs = fromIntegral fszAt

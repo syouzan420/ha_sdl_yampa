@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-module MyLib (tpsForRelativeLine,locToIndex,breakText,toDotPos,addMidDots,selectNearest
-             ,textToDots,textToJumps,dotsToText,jumpsToText,nextPos,textIns,lastTps,headTps
-             ,takeCurrentLine,deleteCurrentLine,takeCodes) where
+module MyLib (tpsForRelativeLine,locToIndex,breakText,breakLine,toDotPos,addMidDots
+             ,selectNearest,textToDots,textToJumps,dotsToText,jumpsToText,nextPos
+             ,textIns,lastTps,headTps,takeCurrentLine,deleteCurrentLine
+             ,takeCodes) where
 
 import Data.Text (Text,uncons)
 import qualified Data.Text as T
@@ -132,6 +133,10 @@ breakText tx = let (hd,tl) = T.break (=='\n') tx
                      |T.head tl == '\n' = " "<>tl
                      |otherwise = tl
                 in (hda,hdb<>tl2)
+
+breakLine :: Text -> (Text,Text)
+breakLine tx = let (hd,tl) = T.break (=='\n') tx
+                in (hd<>"\n",tl)
 
 dotsToRect :: [Dot] -> [Rect]
 dotsToRect dtl = let ds = dotSize

@@ -151,7 +151,7 @@ inputEvent _ = do
             | isTglColor = if cplSt==length colorPallet - 1 then 0 else cplSt+1 
             | otherwise = cplSt
           ntps
-            | ifmSt = tpsSt
+--            | ifmSt = tpsSt
             | isFarForward = tpsFarForward
             | isFarBack = tpsFarBack
             | isUp = if wmdSt==T then if tpsSt==0 then 0 else tpsSt-1 else tpsPreLine

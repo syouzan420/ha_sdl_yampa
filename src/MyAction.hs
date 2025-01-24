@@ -13,6 +13,8 @@ import MyData (IsFormat,TextPos,TextData,Jump,FrJp,Mgn,Size
               ,State(..),Active(..),Attr(..),Rubi(..),Jumping(..),WMode(..)
               ,rubiSize,textLengthLimit,linkColor,selectColor,fontColor,cursorTime)
 
+--import Debug.Trace (trace)
+
 type Index = Int
 type FilePos = Int
 
@@ -45,16 +47,21 @@ makeTexts ind ifmSt wmdSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt =
                 | texSt=="" && tpsSt==0] 
     Just (ch,tailTx) ->  
       let (natr,(ptx,pxs)) 
-            | ifmSt = if ch==';' then exeAttrCom wmdSt fpsSt ind (changeAtr atrSt{ite=False} tailTx) 
-                 else if cnm atrSt/=T.empty then exeAttrCom wmdSt fpsSt ind (atrSt{ite=False},texSt)
-                                            else (atrSt,T.break (==';') texSt)
+            | ifmSt = case ch of
+               ';'-> exeAttrCom wmdSt fpsSt ind (changeAtr atrSt{ite=False} tailTx) 
+               _  -> if cnm atrSt/=T.empty 
+                      then exeAttrCom wmdSt fpsSt ind (atrSt{ite=False},texSt)
+                      else (atrSt,T.break (==';') texSt)
             | otherwise = (atrSt,(texSt,T.empty))
           tll = textLengthLimit
-          (ptx2,pxs2) = if T.length ptx>tll then (T.take tll ptx,T.drop tll ptx<>pxs) else (ptx,pxs)
+          (ptx2,pxs2) = if T.length ptx>tll 
+                            then (T.take tll ptx,T.drop tll ptx<>pxs)
+                            else (ptx,pxs)
           lnTex = T.length texSt 
           preInc = lnTex - T.length pxs2 + 1
           iCur = tpsSt > ind && tpsSt < ind + preInc
-          (iptx,tptx) = if iCur && tpsSt>0 then T.splitAt (tpsSt-ind) ptx2 else (ptx2,T.empty) 
+          (iptx,tptx) = if iCur && tpsSt>0 then T.splitAt (tpsSt-ind) ptx2
+                                           else (ptx2,T.empty) 
           (tx,xs) = if iCur then (iptx<>etxSt,tptx<>pxs2) else (ptx2,pxs2)
           (scrAt,fszAt) = (scr natr,fsz natr)
           fs = fromIntegral fszAt
@@ -100,7 +107,6 @@ getCid tx =
                _    -> 0
    in (ncid, (cm, rtx))
 
-
 exeAttrCom :: WMode -> FilePos -> TextPos -> (Attr,Text) -> (Attr, (Text, Text))
 exeAttrCom wmdSt fpsSt tpsSt (at,tx) = 
   let jmpAt = jmp at 
@@ -112,41 +118,42 @@ exeAttrCom wmdSt fpsSt tpsSt (at,tx) =
       (ttx,rtx) = if cidAt>0 then breakText tailTx  else T.break (==';') tailTx
       tln = fromIntegral (T.length ttx)
       natr = case cnmAt of
-               "rb" -> case cidAt of
-                         2 -> at{rbi=rbiAt{rps=gpsAt,rwd=ltwAt*tln}}
-                         1 -> let fs = fromIntegral fszAt
-                                  rbStartPos = if wmdSt==T then rpsRb + V2 (fs+sprRb) 0  
-                                                           else rpsRb - V2 0 (fromIntegral rubiSize+sprRb)
-                                  rbLetterWidth = rwdRb `div` tln 
-                               in at{gps=rbStartPos,fsz=rubiSize,ltw=rbLetterWidth 
-                                    ,rbi=rbiAt{tsz=fszAt,tlw=ltwAt}} 
-                         0 -> at{gps=rpsRb+(if wmdSt==T then V2 0 rwdRb else V2 rwdRb 0)
-                                  ,fsz=tszRb, ltw=tlwRb}
-                         _ -> at
-               "jtg" -> case cidAt of
-                          1 -> let jd = textToJumpData fpsSt tpsSt ttx
-                                   dataExist = jd `elem` jpsAt
-                                   njps = if dataExist then jpsAt else jpsAt ++ [jd]
-                                in at{jmp=(jmp at){jps=njps},ite=True}
-                          _ -> at
-               "jp" -> case cidAt of
-                         3 -> at{jmp=(jmp at){dta=[ttx]},ite=True} 
-                         2 -> at{jmp=(jmp at){dta=dtaAt++[ttx]},ite=True} 
-                         1 -> let tjp = searchJump jpsAt dtaAt tpsSt 
-                                  dataExist = tjp `elem` fjpAt
-                                  nfjp 
-                                    |fst tjp==(-1) = fjpAt
-                                    |dataExist = fjpAt
-                                    |otherwise = fjpAt ++ [tjp]
-                                  ind = fromMaybe (-1) $ elemIndex tjp nfjp
-                                  nfco
-                                    |sjnAt==ind = selectColor
-                                    |fst tjp/=(-1) = linkColor
-                                    |otherwise = fontColor
-                               in at{jmp=(jmp at){fjp=nfjp},fco=nfco}
-                         0 -> at{fco=fontColor} 
-                         _ -> at
-               _    -> at{cnm=""}
+        "rb" -> case cidAt of
+                  2 -> at{rbi=rbiAt{rps=gpsAt,rwd=ltwAt*tln}}
+                  1 -> let fs = fromIntegral fszAt
+                           rbStartPos = if wmdSt==T 
+                              then rpsRb + V2 (fs+sprRb) 0  
+                              else rpsRb - V2 0 (fromIntegral rubiSize+sprRb)
+                           rbLetterWidth = rwdRb `div` tln 
+                        in at{gps=rbStartPos,fsz=rubiSize,ltw=rbLetterWidth 
+                             ,rbi=rbiAt{tsz=fszAt,tlw=ltwAt}} 
+                  0 -> at{gps=rpsRb+(if wmdSt==T then V2 0 rwdRb else V2 rwdRb 0)
+                           ,fsz=tszRb, ltw=tlwRb}
+                  _ -> at
+        "jtg"-> case cidAt of
+                  1 -> let jd = textToJumpData fpsSt tpsSt ttx
+                           dataExist = jd `elem` jpsAt
+                           njps = if dataExist then jpsAt else jpsAt ++ [jd]
+                        in at{jmp=(jmp at){jps=njps},ite=True}
+                  _ -> at
+        "jp" -> case cidAt of
+                  3 -> at{jmp=(jmp at){dta=[ttx]},ite=True} 
+                  2 -> at{jmp=(jmp at){dta=dtaAt++[ttx]},ite=True} 
+                  1 -> let tjp = searchJump jpsAt dtaAt tpsSt 
+                           dataExist = tjp `elem` fjpAt
+                           nfjp 
+                             |fst tjp==(-1) = fjpAt
+                             |dataExist = fjpAt
+                             |otherwise = fjpAt ++ [tjp]
+                           ind = fromMaybe (-1) $ elemIndex tjp nfjp
+                           nfco
+                             |sjnAt==ind = selectColor
+                             |fst tjp/=(-1) = linkColor
+                             |otherwise = fontColor
+                        in at{jmp=(jmp at){fjp=nfjp},fco=nfco}
+                  0 -> at{fco=fontColor} 
+                  _ -> at
+        _    -> at{cnm=""}
       ncnm = if cidAt==0 then "" else cnmAt
    in (natr{cnm=ncnm, cid=cidAt-1} , (if ite natr then "" else ttx, rtx))
 

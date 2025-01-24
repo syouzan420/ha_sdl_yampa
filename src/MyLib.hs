@@ -105,7 +105,7 @@ nextPos ch tw nw wm ps@(V2 ox oy) (V2 ww wh) (V4 mr mt ml mb) (ln,lt) =
     let cn = fromEnum ch
         htw = tw `div` 2
         ihf = cn > 31 && cn < 127
-        irt = ch `T.elem` "＝ー「」（）：；"
+        irt = ch `T.elem` "＝ー「」（）：；『』"
         inl = ch == '\n'
         ins = ch `T.elem` "\n"
         delta 

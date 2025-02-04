@@ -4,7 +4,7 @@ module MySDL.MyDraw (myDraw,initDraw,textsDraw) where
 import SDL.Video (Renderer, Texture)
 import SDL.Video.Renderer (rendererDrawColor,clear,copy,copyEx,Rectangle(..)
     ,present,createTextureFromSurface,freeSurface,destroyTexture
-    ,fillRect,drawPoint)
+    ,fillRect,drawPoint,queryTexture,TextureInfo(..))
 import SDL (($=))
 import SDL.Vect (Point(P),V2(..))
 import SDL.Font (Font,blended)
@@ -44,7 +44,8 @@ imageDraw :: (MonadIO m) => Renderer -> [Texture] -> [Img] -> m ()
 imageDraw re itex = mapM_ (\(Img pos siz rot name) -> 
   when (name `elem` imageNames) $ do
             let ind = getIndex name imageNames
-            copyEx re (itex!!ind) (Just (Rectangle (P (V2 0 0)) (V2 64 64)))
+            (TextureInfo _ _ twd thi) <- queryTexture (itex!!ind)
+            copyEx re (itex!!ind) (Just (Rectangle (P (V2 0 0)) (V2 twd thi)))
                                   (Just (Rectangle (P pos) siz))
                                   (fromIntegral rot) Nothing (V2 False False) ) 
 

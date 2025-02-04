@@ -6,7 +6,7 @@ module MyData (Pos,Color,Mgn,Size,PList,TextPos,TextData,IsFormat,Dot,Code
               ,WMode(..),EMode(..),FMode(..),Input(..)
               ,title,windowSize,initState,initActive,initAttr,initJumping
               ,dotSize,imageNames,fontFiles,imageFiles,fontSize
-              ,fontColor,backColor,cursorColor,linkColor,selectColor
+              ,fontColor,backColor,cursorColor,linkColor,selectColor,pinkColor
               ,rubiSize,delayTime,cursorTime
               ,initYokoPos,initTatePos,textFileName,textPosFile
               ,colorPallet,statusPos,dotFileName
@@ -147,7 +147,7 @@ imageFiles :: [FilePath]
 imageFiles = map (\s -> "images/"++s++".png") imageNames 
 
 imageNames :: [String]
-imageNames = ["nori","onigiri"] ++ blockNames
+imageNames = ["nori","onigiri","en2","en2_1","raipuni_fig2"] ++ blockNames
 
 blockNames :: [String]
 blockNames = map ("block_"++) ["ho","midu","tama","arg"]
@@ -214,8 +214,11 @@ initRubi = Rubi{rps = initTatePos, rwd = fromIntegral fontSize, tsz = rubiSize
 
 -- COLOR
 
+--backColor :: Color
+--backColor = V4 182 100 255 255
+
 backColor :: Color
-backColor = V4 182 100 255 255
+backColor = V4 180 120 220 255
 
 fontColor :: Color 
 fontColor = V4 255 255 204 255
@@ -235,8 +238,11 @@ blueColor = V4 153 153 255 255
 redColor :: Color
 redColor = V4 255 102 178 255
 
+pinkColor :: Color
+pinkColor = V4 255 200 255 255
+
 colorPallet :: [Color]
-colorPallet = [backColor,fontColor,cursorColor,blueColor,redColor,linkColor,selectColor]
+colorPallet = [backColor,fontColor,cursorColor,blueColor,redColor,linkColor,selectColor,pinkColor]
 
 -- LIMITS OR DURATION
 

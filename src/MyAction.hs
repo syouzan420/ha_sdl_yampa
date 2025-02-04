@@ -11,7 +11,8 @@ import Data.List(elemIndex)
 import MyLib (breakText,breakLine,nextPos)
 import MyData (IsFormat,TextPos,TextData,Jump,FrJp,Mgn,Size
               ,State(..),Active(..),Attr(..),Rubi(..),Jumping(..),WMode(..)
-              ,rubiSize,textLengthLimit,linkColor,selectColor,fontColor,cursorTime)
+              ,rubiSize,textLengthLimit,linkColor,selectColor,fontColor
+              ,cursorColor,pinkColor,cursorTime)
 
 --import Debug.Trace (trace)
 
@@ -93,7 +94,15 @@ makePList wm ws mg at tx =
                           :makePList wm ws mg at{gps=npos} xs
 
 replaceText ::Text -> Text
-replaceText = T.replace ">" ";qu "
+replaceText tx = T.replace "\n#" "\n;hi " $ 
+                 T.replace "*" ";st " $
+                 T.replace "\n>" "\n;qu " $
+                 case uncons tx of 
+  Nothing -> tx
+  Just (ch,tailTx) -> case ch of
+                        '>' -> ";qu " <> tailTx 
+                        _ -> tx
+
 
 changeAtr :: Attr -> Text -> (Attr, Text)
 changeAtr attr tx = 
@@ -105,6 +114,8 @@ getCid :: Text -> (Int, (Text,Text))
 getCid tx =
   let (cm,rtx) = T.break (==' ') tx
       ncid = case cm of
+               "hi" -> 1
+               "st" -> 1
                "qu" -> 1
                "rb" -> 2 
                "jtg" -> 1
@@ -123,21 +134,36 @@ exeAttrCom wmdSt fpsSt tpsSt (at,tx) =
       (ttx,rtx)
         | cidAt>0 = case cnmAt of
                       "qu" -> breakLine tailTx
+                      "hi" -> breakLine tailTx
                       _    -> breakText tailTx
         | otherwise = T.break (==';') tailTx
-      tln = fromIntegral (T.length ttx)
+      tln = T.length ttx
+      tln' = fromIntegral tln
+      ttx' = case cnmAt of
+                "st" -> case cidAt of
+                          1 -> T.take (tln-3) ttx
+                          _ -> ttx
+                _    -> ttx
       natr = case cnmAt of
-        "qu" -> case cidAt of
+        "hi" -> case cidAt of
+                  1 -> at{fsz=fszAt+3,fco=cursorColor}
+                  0 -> at{fsz=fszAt-3,fco=fontColor}
+                  _ -> at
+        "st" -> case cidAt of
                   1 -> at{fco=selectColor}
                   0 -> at{fco=fontColor}
                   _ -> at
+        "qu" -> case cidAt of
+                  1 -> at{fco=pinkColor}
+                  0 -> at{fco=fontColor}
+                  _ -> at
         "rb" -> case cidAt of
-                  2 -> at{rbi=rbiAt{rps=gpsAt,rwd=ltwAt*tln}}
+                  2 -> at{rbi=rbiAt{rps=gpsAt,rwd=ltwAt*tln'}}
                   1 -> let fs = fromIntegral fszAt
                            rbStartPos = if wmdSt==T 
                               then rpsRb + V2 (fs+sprRb) 0  
                               else rpsRb - V2 0 (fromIntegral rubiSize+sprRb)
-                           rbLetterWidth = rwdRb `div` tln 
+                           rbLetterWidth = rwdRb `div` tln' 
                         in at{gps=rbStartPos,fsz=rubiSize,ltw=rbLetterWidth 
                              ,rbi=rbiAt{tsz=fszAt,tlw=ltwAt}} 
                   0 -> at{gps=rpsRb+(if wmdSt==T then V2 0 rwdRb else V2 rwdRb 0)
@@ -168,7 +194,7 @@ exeAttrCom wmdSt fpsSt tpsSt (at,tx) =
                   _ -> at
         _    -> at{cnm=""}
       ncnm = if cidAt==0 then "" else cnmAt
-   in (natr{cnm=ncnm, cid=cidAt-1} , (if ite natr then "" else ttx, rtx))
+   in (natr{cnm=ncnm, cid=cidAt-1} , (if ite natr then "" else ttx', rtx))
 
 textToJumpData :: FilePos -> TextPos -> Text -> Jump
 textToJumpData fpsSt tpsSt ttx = ((fpsSt,T.pack$show fpsSt),(tpsSt,ttx)) 

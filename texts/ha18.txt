@@ -1,5 +1,10 @@
 10 10 64 128 50 ("block_ho") drawImage
 OK.
+0 0 640 480 0 ("raipuni_fig2") drawImage
+OK.
+OK.
+OK.
+OK.OK.
 ```a oneBlock :: k i
 clear
 4 color

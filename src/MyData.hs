@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module MyData (Pos,Color,Mgn,Size,PList,TextPos,TextData,IsFormat,Dot,Code
+module MyData (Pos,Color,Mgn,Size,PList,TextPos,TextData,IsFormat,Dot,Code,Dig
               ,Jump,FrJp,JBak,PointSize
               ,Dt(..),Li(..),Rc(..),Cr(..),Shp(..),Drw(..),Img(..)
               ,Modif(..),State(..),Active(..),Attr(..),Coding(..),Rubi(..),Jumping(..)
@@ -37,10 +37,11 @@ type Jump = ((Int,Text),(Int,Text)) -- ((FileNumber,FileName),(TextPosNumber,Tex
 type FrJp = (Int,(Int,Int)) -- (TextPosition, (FilePosNumber,TextPosNumber))
 type JBak = (Int,Int) -- (FilePosNumber,TextPosNumber)
 type IsFormat = Bool
+type Dig = (String,String) -- Digraph data
 
 data Modif = Alt | Ctr | Shf | Non deriving (Eq, Show) --modifier
 data WMode = T | Y deriving (Eq,Show) -- writing mode 
-data EMode = Nor | Ins deriving (Eq,Show) -- edit mode --Normal Insert
+data EMode = Nor | Ins | Dgr deriving (Eq,Show) -- edit mode --Normal Insert Digraph
 data FMode = Min | Got | Ost deriving (Eq, Ord, Show) -- font mode
 data Input = NON | PKY | PMO | NFL | LFL | LPR | LRF | JMP | JBK | EXE | QIT
                                                               deriving (Eq, Show)
@@ -58,6 +59,7 @@ data Img = Img !Pos !Size !CInt !Name deriving (Eq,Show) --Image: position, size
 -- act: active datas
 -- drw: drawing
 -- img: images 
+-- dig: digraphs
 -- com: command for normal mode
 -- atr: text attribute
 -- mgn: margins (right, top, left, bottom)
@@ -69,8 +71,9 @@ data Img = Img !Pos !Size !CInt !Name deriving (Eq,Show) --Image: position, size
 -- isk: skk editing
 -- iup: need text update? (for example: after reading file) 
 
-data State = State{act :: !Active, drw :: ![Drw], img :: ![Img], cdn :: !Coding 
-                  ,com :: !String, wsz :: !Size, mgn :: !Mgn , atr :: !Attr
+data State = State{act :: !Active, drw :: ![Drw], img :: ![Img], dig :: ![Dig]
+                  ,cdn :: !Coding ,com :: !String
+                  ,wsz :: !Size, mgn :: !Mgn , atr :: !Attr
                   ,wmd :: !WMode, emd :: !EMode, cpl :: !Cnum, lsz :: !CInt
                   ,ifm :: !Bool, isk :: !Bool, iup :: !Bool}
 
@@ -152,6 +155,11 @@ imageNames = ["nori","onigiri","en2","en2_1","raipuni_fig2"] ++ blockNames
 blockNames :: [String]
 blockNames = map ("block_"++) ["ho","midu","tama","arg"]
 
+-- Digraph
+
+initDig :: [Dig]
+initDig = [("e'","é"),("e:","ë"),("o/","ø"),("o:","ö")]
+
 -- SIZE AND POSITION
 
 winSizeX, winSizeY :: CInt
@@ -187,7 +195,8 @@ initTatePos = V2 (winSizeX-60) 30
 -- INITIALIZE
 
 initState :: State
-initState = State {act = initActive, drw = [], img = [], cdn = initCoding, com = ""
+initState = State {act = initActive, drw = [], img = [], dig = initDig 
+                  ,cdn = initCoding, com = ""
                   ,wsz = windowSize, mgn = margins, atr = initAttr
                   ,wmd = T,emd=Nor, cpl=1, lsz=1
                   ,ifm=False, isk=False, iup=False}

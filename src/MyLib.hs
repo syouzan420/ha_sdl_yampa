@@ -2,7 +2,7 @@
 module MyLib (tpsForRelativeLine,locToIndex,breakText,breakLine,toDotPos,addMidDots
              ,selectNearest,textToDots,textToJumps,dotsToText,jumpsToText,nextPos
              ,textIns,lastTps,headTps,takeCurrentLine,deleteCurrentLine
-             ,takeCodes) where
+             ,takeCodes,toDig) where
 
 import Data.Text (Text,uncons)
 import qualified Data.Text as T
@@ -11,7 +11,7 @@ import Linear.V2 (V2(..))
 import Linear.V4 (V4(..))
 import Data.Maybe(fromMaybe)
 import Data.List (nub,elemIndex)
-import MyData (Pos,Dot,Jump,Mgn,Size,Attr(..),WMode(..),dotSize)
+import MyData (Pos,Dot,Dig,Jump,Mgn,Size,Attr(..),WMode(..),dotSize)
 
 type Index = Int
 type Line = Int
@@ -40,6 +40,9 @@ takeCodes' False False (x:xs)
 
 textIns :: T.Text -> Int -> T.Text -> T.Text
 textIns tx tpsSt texSt = T.take tpsSt texSt <> tx <> T.drop tpsSt texSt 
+
+toDig :: String -> [Dig] -> T.Text
+toDig tx digs = T.pack $ fromMaybe "" $ lookup tx digs 
 
 lastTps :: Int -> T.Text -> Int
 lastTps tpsSt texSt = let dropLines = T.lines$T.drop tpsSt texSt
@@ -105,8 +108,8 @@ nextPos :: Char -> CInt -> CInt -> WMode -> Pos -> Size -> Mgn -> Location
 nextPos ch tw nw wm ps@(V2 ox oy) (V2 ww wh) (V4 mr mt ml mb) (ln,lt) = 
     let cn = fromEnum ch
         htw = tw `div` 2
-        ihf = cn > 31 && cn < 127
-        irt = ch `T.elem` "＝ー「」（）：；『』"
+        ihf = cn > 31 && cn < 256 
+        irt = ch `T.elem` "＝ー「」（）：；『』→←↓↑"
         inl = ch == '\n'
         ins = ch `T.elem` "\n"
         delta 

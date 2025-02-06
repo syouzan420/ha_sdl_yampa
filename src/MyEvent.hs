@@ -8,7 +8,7 @@ import qualified Control.Monad.State.Strict as S
 import Control.Monad (when)
 import qualified Data.Text as T
 import MyData (State(..),Active(..),Attr(..),Coding(..),Jumping(..),Modif(..),WMode(..),EMode(..),FMode(..),Input(..),initYokoPos,initTatePos,colorPallet)
-import MyLib (tpsForRelativeLine,locToIndex,toDotPos,addMidDots,selectNearest,textIns,lastTps,takeCurrentLine,deleteCurrentLine,headTps)
+import MyLib (tpsForRelativeLine,locToIndex,toDotPos,addMidDots,selectNearest,textIns,lastTps,takeCurrentLine,deleteCurrentLine,headTps,toDig)
 import Mana.Mana (evalCode,taiyouMn,Mn(..),Yo(..),Dtype(..),preDef,userDef)
 import SDL.Raw.Types (Rect(..))
 import SDL.Input.Keyboard (startTextInput,stopTextInput)
@@ -27,15 +27,16 @@ inputEvent _ = do
     Just (InpRes kc md it mps isc ised _) -> do
       st <- S.get
       let (actSt,cdnSt) = (act st, cdn st) 
-          (texSt,etxSt,dtsSt,tpsSt,dfnSt,comSt,wszSt,mgnSt,atrSt,emdSt,wmdSt,cplSt,ifmSt,iskSt)
+          (texSt,etxSt,dtsSt,tpsSt,dfnSt,digSt,comSt,wszSt,mgnSt,atrSt,emdSt,wmdSt,cplSt,ifmSt,iskSt)
             = (tex actSt,etx actSt,dts actSt,tps actSt,dfn cdnSt
-              ,com st,wsz st,mgn st,atr st,emd st,wmd st,cpl st,ifm st,isk st)
+              ,dig st,com st,wsz st,mgn st,atr st,emd st,wmd st,cpl st,ifm st,isk st)
           isKeyPressed = kc/=KeycodeUnknown
           isMousePressed = mps/=V2 (-1) (-1)
           isQuit = kc==KeycodeEscape   -- ESC Key
 
           isNor = emdSt==Nor
           isIns = emdSt==Ins
+          isDig = emdSt==Dgr
           isRet = kc==KeycodeReturn
 
       ----normal mode
@@ -55,6 +56,7 @@ inputEvent _ = do
       ----insert mode
 
           isToNor = isExit && isIns
+          isToDig = kc==KeycodeK && md==Ctr && isIns
 
       ----with ctrl key
 
@@ -75,6 +77,7 @@ inputEvent _ = do
           isFontMinus = kc==KeycodeMinus && md==Ctr
 
           isExeCode = kc==KeycodeE && md==Ctr
+          isExeDig = isDig && length comSt == 1 
 
           isDrawClear = kc==KeycodeD && md==Ctr
           isTglColor = kc==KeycodeC && md==Ctr
@@ -88,7 +91,8 @@ inputEvent _ = do
 
           isBS = (kc==KeycodeBackspace && not iskSt) || (isNor && kc==KeycodeX)
           isDeleteLine = not (null comSt) && last comSt=='d' && kc==KeycodeD 
-      
+          isToTop = not (null comSt) && last comSt=='g' && kc==KeycodeG
+
           isCom = md==Alt
           comName = case kc of
                   KeycodeR -> ";rb "
@@ -114,11 +118,13 @@ inputEvent _ = do
             | otherwise = T.empty
       
           nit = if isIns && isRet && it==T.empty then "\n" else it
-          centerLineNum = if wmdSt==T then (ww-mr-ml) `div` lw `div` 2  + sx `div` lw 
-                               else (wh-mt-mb) `div` lw `div` 2 - sy `div` lw
+          centerLineNum = 
+              if wmdSt==T then (ww-mr-ml) `div` lw `div` 2  + sx `div` lw 
+                          else (wh-mt-mb) `div` lw `div` 2 - sy `div` lw
           centerIndex = locToIndex wmdSt wszSt mgnSt atrSt texSt (fromIntegral centerLineNum,0)
           nsjn = selectNearest centerIndex (map fst fjpAt)
           nscr
+            | isToTop = V2 0 0
             | ifmSt && wmdSt==T && isLeft = scrAt+V2 lw 0
             | ifmSt && wmdSt==T && isRight = scrAt-V2 lw 0
             | ifmSt && wmdSt==Y && isUp = scrAt+V2 0 lw
@@ -154,6 +160,7 @@ inputEvent _ = do
 --            | ifmSt = tpsSt
             | isFarForward = tpsFarForward
             | isFarBack = tpsFarBack
+            | isToTop = 0
             | isUp = if wmdSt==T then if tpsSt==0 then 0 else tpsSt-1 else tpsPreLine
             | isDown = if wmdSt==T 
                         then if tpsSt==tLen then tLen else tpsSt+1 else tpsNextLine
@@ -161,6 +168,7 @@ inputEvent _ = do
                         then 0 else tpsSt-1 else tpsNextLine
             | isRight = if wmdSt==Y 
                         then if tpsSt==tLen then tLen else tpsSt+1 else tpsPreLine
+            | isExeDig = tpsSt + T.length (toDig ncom digSt) 
             | isCom = tpsSt + T.length comName 
             | isExeCode = lastTps tpsSt texSt + T.length codeResult
             | isIns && nit/=T.empty && not ised = tpsSt + T.length nit 
@@ -168,8 +176,10 @@ inputEvent _ = do
             | isDeleteLine = headTps tpsSt texSt
             | otherwise = tpsSt
           nemd
+            | isExeDig = Ins
             | isToIns = Ins 
             | isToNor = Nor 
+            | isToDig = Dgr
             | otherwise = emdSt
           nwmd  
             | isTglDir = if wmdSt==T then Y else T
@@ -180,6 +190,7 @@ inputEvent _ = do
             | isDeleteLine = deleteCurrentLine tpsSt texSt
             | isCom = textIns comName tpsSt texSt
             | isExeCode = textIns codeResult (lastTps tpsSt texSt) texSt 
+            | isExeDig = textIns (toDig ncom digSt) tpsSt texSt
             | isIns && not ised = textIns nit tpsSt texSt 
             | otherwise = texSt
           ndts 
@@ -193,8 +204,12 @@ inputEvent _ = do
             | isExeCode && yo==Io = if '\n' `elem` ta then lines ta else [ta] 
             | otherwise = [] 
           ncom
-            | isExit || texSt /= ntex = "" 
-            | isNor = case kc of KeycodeD -> comSt ++ "d"; _ -> comSt 
+            | isExit || isToTop || isDeleteLine = "" 
+            | isDig = if length comSt<2 then comSt ++ T.unpack it else T.unpack it 
+            | isNor = case kc of 
+                KeycodeD -> comSt ++ "d"
+                KeycodeG -> comSt ++ "g"
+                _ -> comSt 
             | otherwise = comSt
           nifm
             | isTglFmt = not ifmSt

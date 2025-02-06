@@ -90,8 +90,9 @@ statusDraw re font st = do
       editMode = pack$show$emd st
       scroll = pack$show$scr (atr st)
       fromJump = pack$show$fjp$jmp (atr st)
+      command = pack$com st
       statusText = "fNum:"<>fileNum<>" tPos:"<>textPos<>" eMode:"<>editMode <>" scr:"<>scroll
-                  <>" fjp:"<>fromJump
+                  <>" fjp:"<>fromJump<>" com:"<>command
       ofs = fromIntegral fontSize
       lng = fromIntegral$T.length statusText
   fontS <- blended font (colorPallet!!1) statusText 

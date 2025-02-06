@@ -42,7 +42,7 @@ type Dig = (String,String) -- Digraph data
 data Modif = Alt | Ctr | Shf | Non deriving (Eq, Show) --modifier
 data WMode = T | Y deriving (Eq,Show) -- writing mode 
 data EMode = Nor | Ins | Dgr deriving (Eq,Show) -- edit mode --Normal Insert Digraph
-data FMode = Min | Got | Ost deriving (Eq, Ord, Show) -- font mode
+data FMode = Min | Got | Ost | Azu deriving (Eq, Ord, Show) -- font mode
 data Input = NON | PKY | PMO | NFL | LFL | LPR | LRF | JMP | JBK | EXE | QIT
                                                               deriving (Eq, Show)
 -- nothingPressed | isKeyPressed | isMousePressed | isNewFile | isLoadFile | isLoadPrevFile | isLoadRecentFile | isJump | isJBack | isFontPlus | isFontMinus | isExeCode | isQuit
@@ -144,7 +144,7 @@ jumpNameFile :: FilePath
 jumpNameFile = "./jpnm.txt"
 
 fontFiles :: [FilePath]
-fontFiles = map ("fonts/"++) ["ipamjm.ttf","marugo.TTC","oshide.otf"]
+fontFiles = map ("fonts/"++) ["ipamjm.ttf","marugo.TTC","oshide.otf","azuki.ttf"]
 
 imageFiles :: [FilePath]
 imageFiles = map (\s -> "images/"++s++".png") imageNames 

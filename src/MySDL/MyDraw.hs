@@ -112,10 +112,11 @@ textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
   let (scrAt,fszAt,fcoAt,fmdAt) = (scr nat,fsz nat,fco nat,fmd nat)
       ofs = fromIntegral dfsz 
       fs = fromIntegral fszAt
-      fnum = case fmdAt of Min -> 0; Got -> 1; Ost -> 2
+      fnum = case fmdAt of Min -> 0; Got -> 1; Ost -> 2; Azu -> 3;
       nscr = if null xs then scrAt else let (_,_,nxtAtr,_) = head xs in scr nxtAtr
       rpText = T.replace "\n" "  " tx
       rpText2 = T.replace "\n" "　" tx
+      rpText3 = T.replace "\n" "┗" tx
 
       lPos = snd$last pList
       tx' = if fnum==0 then T.pack $ map fst $ filter (\(_,((b,_),_)) -> not b) (zip (T.unpack rpText2) pList) else tx
@@ -125,6 +126,7 @@ textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
                  0 -> blended (fonts!!fnum) fcoAt tx' 
                  1 -> blended (fonts!!fnum) fcoAt tx 
                  2 -> blended (fonts!!fnum) fcoAt rpText
+                 3 -> blended (fonts!!fnum) fcoAt rpText 
                  _ -> blended (fonts!!1) fcoAt tx
         fontT <- createTextureFromSurface re fontS
         foldM_ (\ ps ((b,r),pd) -> do

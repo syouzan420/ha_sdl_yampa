@@ -71,6 +71,7 @@ inputEvent _ = do
 
           isTglOsd = kc==KeycodeO && md==Ctr
           isTglMin = kc==KeycodeM && md==Ctr
+          isTglAzu = kc==KeycodeA && md==Ctr
           isTglFmt = kc==KeycodeF && md==Ctr
 
           isFontPlus = kc==KeycodeEquals && md==Ctr
@@ -147,6 +148,7 @@ inputEvent _ = do
                                      else atrSt{gps=initTatePos,scr=V2 0 0} 
             | isTglOsd = if fm==Ost then atrSt{fmd=Got} else atrSt{fmd=Ost}
             | isTglMin = if fm==Min then atrSt{fmd=Got} else atrSt{fmd=Min}
+            | isTglAzu = if fm==Azu then atrSt{fmd=Got} else atrSt{fmd=Azu}
             | otherwise = atrSt{scr=nscr,jmp=(jmp atrSt){sjn=nsjn},fsz=nfsz
                               ,ltw=nltw,lnw=nlnw}
           netx 

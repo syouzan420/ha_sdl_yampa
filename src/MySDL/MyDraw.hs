@@ -7,10 +7,12 @@ import SDL.Video.Renderer (rendererDrawColor,clear,copy,copyEx,Rectangle(..)
     ,fillRect,drawPoint,queryTexture,TextureInfo(..))
 import SDL (($=))
 import SDL.Vect (Point(P),V2(..))
-import SDL.Font (Font,blended)
+import SDL.Font (Font,blended,size)
 import SDL.Primitive (thickLine,rectangle,circle,fillCircle)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad (foldM_,when,unless)
+import Data.Bifunctor (first)
+--import Data.List (partition)
 import Foreign.C.Types (CInt)
 import qualified Data.Text as T
 import Data.Text (pack)
@@ -115,39 +117,46 @@ textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
       fnum = case fmdAt of Min -> 0; Got -> 1; Ost -> 2; Azu -> 3;
       nscr = if null xs then scrAt else let (_,_,nxtAtr,_) = head xs in scr nxtAtr
       rpText = T.replace "\n" "  " tx
-      rpText2 = T.replace "\n" "　" tx
-      rpText3 = T.replace "\n" "┗" tx
+      rpText2 = T.replace "\t" "　" $ 
+                T.replace "\r" "　" $
+                T.replace "\n" "　" tx
 
       lPos = snd$last pList
-      tx' = if fnum==0 then T.pack $ map fst $ filter (\(_,((b,_),_)) -> not b) (zip (T.unpack rpText2) pList) else tx
-      pList' = if fnum==0 then filter (\((b,_),_)->not b) pList else pList
+--      (txPListHalf,txPListWhole) =
+--           partition (\(_,((b,_),_)) -> b) (zip (T.unpack rpText2) pList)
+--      (tx', pListWhole) = first T.pack $ unzip txPListWhole
+      (tx',pListWhole) = if fnum==0 then first T.pack $ unzip $
+              filter (\(_,((b,_),_)) -> not b) (zip (T.unpack rpText2) pList)
+                                else (tx, pList)
+      fText = case fnum of 0 -> tx'; 1 -> tx; 2 -> rpText; 3 -> rpText2; _ -> tx;
+      fnum' = if fnum > 3 then 1 else fnum
   when (tx'/=T.empty) $ do
-        fontS <- case fnum of
-                 0 -> blended (fonts!!fnum) fcoAt tx' 
-                 1 -> blended (fonts!!fnum) fcoAt tx 
-                 2 -> blended (fonts!!fnum) fcoAt rpText
-                 3 -> blended (fonts!!fnum) fcoAt rpText 
-                 _ -> blended (fonts!!1) fcoAt tx
+        fontS <- blended (fonts!!fnum') fcoAt fText 
         fontT <- createTextureFromSurface re fontS
         foldM_ (\ ps ((b,r),pd) -> do
           let sz = if b then ofs `div` 2 else ofs
-          copyEx re fontT (Just (Rectangle (P ps) (V2 sz ofs)))
-                          (Just (Rectangle (P (pd+nscr)) (V2 (if b then fs `div` 2 else fs) fs)))
-                          (if wmdSt==T && (b||r) then 90 else 0) Nothing (V2 False False)
+          copyEx re fontT 
+            (Just (Rectangle (P ps) (V2 sz ofs)))
+            (Just (Rectangle (P (pd+nscr)) (V2 (if b then fs `div` 2 else fs) fs)))
+            (if wmdSt==T && (b||r) then 90 else 0) Nothing (V2 False False)
           return (ps+V2 sz 0)
-              ) (V2 0 0) pList'
+              ) (V2 0 0) pListWhole
         destroyTexture fontT
         freeSurface fontS
   when (tx/=T.empty && fnum==0) $ do
-        fontS2 <- blended (fonts!!1) fcoAt tx
+        fontS2 <- blended (fonts!!4) fcoAt tx
+        (sz,szh) <- size (fonts!!4) "a"
+        let (fszX,fszY) = (fromIntegral sz, fromIntegral szh)
         fontT2 <- createTextureFromSurface re fontS2
         foldM_ (\ ps ((b,r),pd) -> do
-          let sz = if b then ofs `div` 2 else ofs
+ --         let sz = if b then ofs `div` 2 else ofs
           when b $ do
-            copyEx re fontT2 (Just (Rectangle (P ps) (V2 sz ofs)))
-                             (Just (Rectangle (P (pd+nscr)) (V2 (if b then fs `div` 2 else fs) fs)))
-                             (if wmdSt==T && (b||r) then 90 else 0) Nothing (V2 False False)
-          return (ps+V2 sz 0)
+            copyEx re fontT2 
+             (Just (Rectangle (P ps) (V2 fszX fszY)))
+             (Just (Rectangle (P (pd+nscr)) (V2 fszX fszY)))
+--             (Just (Rectangle (P (pd+nscr)) (V2 (if b then fs `div` 2 else fs) fs)))
+             (if wmdSt==T && (b||r) then 90 else 0) Nothing (V2 False False)
+          return (ps+V2 fszX 0)
               ) (V2 0 0) pList
         destroyTexture fontT2
         freeSurface fontS2

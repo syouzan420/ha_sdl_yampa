@@ -144,7 +144,7 @@ jumpNameFile :: FilePath
 jumpNameFile = "./jpnm.txt"
 
 fontFiles :: [FilePath]
-fontFiles = map ("fonts/"++) ["ipamjm.ttf","marugo.TTC","oshide.otf","azuki.ttf"]
+fontFiles = map ("fonts/"++) ["ipamjm.ttf","marugo.TTC","oshide.otf","azuki.ttf","hack.ttf"]
 
 imageFiles :: [FilePath]
 imageFiles = map (\s -> "images/"++s++".png") imageNames 

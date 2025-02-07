@@ -78,7 +78,7 @@ inputEvent _ = do
           isFontMinus = kc==KeycodeMinus && md==Ctr
 
           isExeCode = kc==KeycodeE && md==Ctr
-          isExeDig = isDig && length comSt == 1 
+          isExeDig = isDig && length ncom == 2 
 
           isDrawClear = kc==KeycodeD && md==Ctr
           isTglColor = kc==KeycodeC && md==Ctr

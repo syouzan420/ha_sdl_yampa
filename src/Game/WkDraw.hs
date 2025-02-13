@@ -33,8 +33,8 @@ type MapPos = Pos
 type MapRPos = Pos
 
 wkDraw :: (MonadIO m) => Renderer -> [Font] -> [[Surface]] -> Texture 
-                                                    -> TextData -> Waka -> m ()
-wkDraw re fonts surfs texture textData wk = do
+                                                    -> [TextData] -> Waka -> m ()
+wkDraw re fonts surfs texture textDatas wk = do
   let plnWk = pln wk  --player chara number
   let plyWk = chs wk!!plnWk
   let (mszWk,tszWk,mpsWk,mrpWk,acoWk,iscWk) = (msz wk,tsz wk,mps wk,mrp wk,aco wk,isc wk)
@@ -44,7 +44,7 @@ wkDraw re fonts surfs texture textData wk = do
       mapDraw re (head surfs) (gmp wk) mszWk tszWk mpsWk mrpWk acoWk
   when (ipl wk) $ do
       playerDraw re (surfs!!1) (tsz wk) plnWk plyWk mpsWk mrpWk iscWk acoWk
-  textsDraw re fonts fontSize T True False (tps wk) textData
+  textsDraw re fonts fontSize T True False (tps wk) textDatas
   present re
 
 playerDraw :: (MonadIO m) => Renderer -> [Surface] -> 

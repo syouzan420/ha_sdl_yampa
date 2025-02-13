@@ -12,7 +12,8 @@ import System.Directory (doesFileExist)
 import Linear.V2 (V2(..))
 import MySDL.MyDraw (myDraw)
 import MyData (State(..),Active(..),Attr(..),Coding(..),Jumping(..),Dot,Input(..)
-              ,JBak,FrJp,delayTime,textFileName,textPosFile,dotFileName,jumpNameFile)
+              ,JBak,FrJp,TextData(..)
+              ,delayTime,textFileName,textPosFile,dotFileName,jumpNameFile)
 import MyAction (beforeDraw,afterDraw,makeTextData)
 import MyLib (textToDots,dotsToText,jumpsToText)
 import MyFile (fileRead,fileWrite)
@@ -54,9 +55,9 @@ myOut re fonts itexs _ (inp,isUpdateTps) = do
           || isUpdateTps || inp==PKY || iup cst' || etx actSt /= etx cactSt' 
       isUpdateDraw = inp==PMO || inp==EXE || isUpdateText
       isOnlyMouse = inp==PMO && not isUpdateText
-      textData = if isUpdateDraw then makeTextData cst' else []
-      getAtr d = let (_,_,gatr,_) = last d in gatr
-      natr = if null textData then atr cst' else getAtr textData
+      textDatas = if isUpdateDraw then makeTextData cst' else []
+      getAtr d = let (TD _ _ gatr _) = last d in gatr
+      natr = if null textDatas then atr cst' else getAtr textDatas
       nscr = if inp==NFL || inp==LFL || inp==JMP then V2 0 0 else scr natr
       jmpAt = jmp natr
       (njps,nfjp,jbkAt,nsjn,fpsSt) = 
@@ -67,7 +68,7 @@ myOut re fonts itexs _ (inp,isUpdateTps) = do
       isRunWaka = isLastElem msgSt "runWaka"
       wkInitFile = if isRunWaka then read (last (init msgSt)) else 0
 
-  when isUpdateDraw $ myDraw re fonts itexs textData isOnlyMouse (beforeDraw cst')
+  when isUpdateDraw $ myDraw re fonts itexs textDatas isOnlyMouse (beforeDraw cst')
 
   let fc
        | inp==NFL = NewFile

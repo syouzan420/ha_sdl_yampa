@@ -4,17 +4,16 @@ module MyAction (myAction,beforeDraw,afterDraw,makePList,changeAtr
 
 import Data.Text (Text,uncons)
 import qualified Data.Text as T
-import Foreign.C.Types (CInt)
+--import Foreign.C.Types (CInt)
 import SDL.Vect (V2(..),V4(..))
 import Data.Maybe(fromMaybe)
 import Data.List(elemIndex)
+import General (getIndex)
 import MyLib (breakText,breakLine,nextPos)
-import MyData (IsFormat,TextPos,TextData,Jump,FrJp,Mgn,Size
+import MyData (IsFormat,TextPos,TextData(..),Jump,FrJp,Mgn,Size,ChPos(..)
               ,State(..),Active(..),Attr(..),Rubi(..),Jumping(..),WMode(..)
               ,rubiSize,textLengthLimit,linkColor,selectColor,fontColor
-              ,cursorColor,pinkColor,cursorTime)
-
---import Debug.Trace (trace)
+              ,cursorColor,pinkColor,cursorTime,imageNames)
 
 type Index = Int
 type FilePos = Int
@@ -33,26 +32,26 @@ beforeDraw st =
 afterDraw :: State -> State
 afterDraw st = st
 
-makeTextData :: State -> TextData 
+makeTextData :: State -> [TextData] 
 makeTextData st =
   let ac = act st 
-      (texSt,etxSt,fpsSt,tpsSt,wszSt,mgnSt,atrSt,wmdSt,ifmSt) 
-              = (tex ac,etx ac,fps ac,tps ac,wsz st,mgn st,atr st,wmd st,ifm st)
-   in makeTexts 0 ifmSt wmdSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt
+      (texSt,etxSt,fpsSt,tpsSt,iszSt,wszSt,mgnSt,atrSt,wmdSt,ifmSt) 
+          = (tex ac,etx ac,fps ac,tps ac,isz st,wsz st,mgn st,atr st,wmd st,ifm st)
+   in makeTexts 0 ifmSt wmdSt iszSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt
 
-makeTexts :: Index -> IsFormat -> WMode -> FilePos -> TextPos ->
-                              Size -> Mgn -> Attr -> Text -> Text -> TextData 
-makeTexts ind ifmSt wmdSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt = 
+makeTexts :: Index -> IsFormat -> WMode -> [Size] -> FilePos -> TextPos ->
+                        Size -> Mgn -> Attr -> Text -> Text -> [TextData] 
+makeTexts ind ifmSt wmdSt iszSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt = 
   let texSt' = if ifmSt then replaceText texSt else texSt 
    in case uncons texSt' of
-    Nothing -> [(True,etxSt,atrSt,makePList wmdSt wszSt mgnSt atrSt etxSt) 
+    Nothing -> [TD True etxSt atrSt (makePList wmdSt wszSt mgnSt atrSt etxSt) 
                 | texSt=="" && tpsSt==0] 
     Just (ch,tailTx) ->  
       let (natr,(ptx,pxs)) 
             | ifmSt = case ch of
-               ';'-> exeAttrCom wmdSt fpsSt ind (changeAtr atrSt{ite=False} tailTx) 
+               ';'-> exeAttrCom wmdSt iszSt fpsSt ind (changeAtr atrSt{ite=False} tailTx) 
                _  -> if cnm atrSt/=T.empty 
-                      then exeAttrCom wmdSt fpsSt ind (atrSt{ite=False},texSt')
+                      then exeAttrCom wmdSt iszSt fpsSt ind (atrSt{ite=False},texSt')
                       else (atrSt,T.break (==';') texSt')
             | otherwise = (atrSt,(texSt,T.empty))
           tll = textLengthLimit
@@ -69,29 +68,31 @@ makeTexts ind ifmSt wmdSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt =
           fs = fromIntegral fszAt
           pList = makePList wmdSt wszSt mgnSt natr tx
           indInc = lnTex - T.length xs 
-          lPos@(V2 lpx lpy) = snd$last pList
+          CP _ _ lPos@(V2 lpx lpy) = last pList
           (V2 sx sy) = scrAt
           (V2 ww wh) = wszSt
           (V4 mr mt ml mb) = mgnSt
           nscr
             | iCur && wmdSt == T && lpx+sx < ml = V2 (ml-lpx) sy 
-            | iCur && wmdSt == T && (cnm natr)/="rb" && lpx+sx > ww - mr - fs  
+            | iCur && wmdSt == T && cnm natr/="rb" && lpx+sx > ww - mr - fs  
                                               = V2 (ww-mr-fs*2-lpx) sy
             | iCur && wmdSt == Y && lpy+sy > wh - mb - fs = V2 sx (wh-mb-fs-lpy)
             | iCur && wmdSt == Y && lpy+sy < mt = V2 sx (mt+fs-lpy)
             | otherwise = scrAt
-      in (iCur,tx,natr{gps=lPos,scr=nscr},pList):makeTexts (ind+indInc) ifmSt wmdSt fpsSt tpsSt wszSt mgnSt natr{gps=lPos,scr=nscr} etxSt xs 
+      in TD iCur tx natr{gps=lPos,scr=nscr} pList:makeTexts (ind+indInc) ifmSt wmdSt iszSt fpsSt tpsSt wszSt mgnSt natr{gps=lPos,scr=nscr} etxSt xs 
 
-makePList :: WMode -> Size -> Mgn -> Attr -> Text -> [((Bool,Bool),V2 CInt)]
+makePList :: WMode -> Size -> Mgn -> Attr -> Text -> [ChPos]
 makePList wm ws mg at tx = 
   let (ps@(V2 ox oy),tw,nw) = (gps at,ltw at,lnw at)
    in case uncons tx of
-    Nothing -> [((False,False),ps)]
+    Nothing -> [CP False False ps]
     Just (ch,xs) -> let ((ihf,irt),(npos,_)) = nextPos ch tw nw wm ps ws mg (0,0) 
                         qtw = tw `div` 4
                         ihft = wm==T && ihf
-                     in ((ihf,irt),V2 (if ihft then ox+qtw else ox) (if ihft then oy-qtw else oy))
-                          :makePList wm ws mg at{gps=npos} xs
+                     in CP ihf irt (V2 (if ihft then ox+qtw else ox)
+                                        (if ihft then oy-qtw else oy)
+                                    )
+                        :makePList wm ws mg at{gps=npos} xs
 
 replaceText ::Text -> Text
 replaceText tx = T.replace "\n#" "\n;hi " $ 
@@ -124,8 +125,9 @@ getCid tx =
                _    -> 0
    in (ncid, (cm, rtx))
 
-exeAttrCom :: WMode -> FilePos -> TextPos -> (Attr,Text) -> (Attr, (Text, Text))
-exeAttrCom wmdSt fpsSt tpsSt (at,tx) = 
+exeAttrCom :: WMode -> [Size] -> FilePos 
+                      -> TextPos -> (Attr,Text) -> (Attr, (Text, Text))
+exeAttrCom wmdSt iszSt fpsSt tpsSt (at,tx) = 
   let jmpAt = jmp at 
       (gpsAt,fszAt,ltwAt,rbiAt,dtaAt,jpsAt,fjpAt,sjnAt,cnmAt,cidAt) =
         (gps at,fsz at,ltw at,rbi at
@@ -148,8 +150,12 @@ exeAttrCom wmdSt fpsSt tpsSt (at,tx) =
                 _    -> rtx
       natr = case cnmAt of
         "pic" -> case cidAt of 
-                  1 -> undefined
-                  0 -> undefined
+                  1 -> let name = T.unpack ttx 
+                           (V2 iwd ihi) = if name `elem` imageNames 
+                              then iszSt!!getIndex name imageNames
+                              else V2 0 0
+                        in at{gps=if wmdSt==T then gpsAt-V2 iwd 0 
+                                              else gpsAt+V2 0 ihi}
                   _ -> at
         "hi" -> case cidAt of
                   1 -> at{fsz=fszAt+3,fco=cursorColor}

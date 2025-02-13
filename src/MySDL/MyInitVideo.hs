@@ -1,12 +1,15 @@
-module MySDL.MyInitVideo (withMyVideo) where
+module MySDL.MyInitVideo (withMyVideo,getImageSize) where
 
 import SDL.Video (createWindow, defaultWindow, windowInitialSize
                  ,createRenderer,defaultRenderer,destroyWindow)
-import SDL.Video.Renderer (Surface,Renderer,Texture,createTextureFromSurface,present,freeSurface)
+import SDL.Video.Renderer (Surface,Renderer,Texture,TextureInfo(..)
+                          ,createTextureFromSurface,present,freeSurface
+                          ,queryTexture)
+import SDL.Vect (V2(..))
 import MySDL.MyDraw (initDraw)
 import Control.Monad (void)
 import Control.Monad.IO.Class (MonadIO)
-import MyData (windowSize,title)
+import MyData (Size,windowSize,title)
 
 withMyVideo :: (MonadIO m) => [Surface] -> ((Renderer,[Texture]) -> m a) -> m ()
 withMyVideo imageS op = do
@@ -18,3 +21,7 @@ withMyVideo imageS op = do
       present renderer
       void $ op (renderer,itexs)
       destroyWindow window
+
+getImageSize :: (MonadIO m) => [Texture] -> m [Size]
+getImageSize = mapM (\t -> do (TextureInfo _ _ twd thi) <- queryTexture t 
+                              return (V2 twd thi))

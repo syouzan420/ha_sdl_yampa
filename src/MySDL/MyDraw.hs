@@ -4,7 +4,7 @@ module MySDL.MyDraw (myDraw,initDraw,textsDraw) where
 import SDL.Video (Renderer, Texture)
 import SDL.Video.Renderer (rendererDrawColor,clear,copy,copyEx,Rectangle(..)
     ,present,createTextureFromSurface,freeSurface,destroyTexture
-    ,fillRect,drawPoint,queryTexture,TextureInfo(..))
+    ,fillRect,drawPoint)
 import SDL (($=))
 import SDL.Vect (Point(P),V2(..))
 import SDL.Font (Font,blended,size)
@@ -18,7 +18,7 @@ import qualified Data.Text as T
 import Data.Text (pack)
 import General (getIndex)
 import MyData (State(..),Active(..),Attr(..),Jumping(..),WMode(..),FMode(..)
-              ,IsFormat,Dot,Pos,TextPos,TextData,PointSize
+              ,IsFormat,Dot,Pos,TextPos,TextData(..),ChPos(..),PointSize,Size
               ,Dt(..),Li(..),Rc(..),Cr(..),Shp(..),Drw(..),Img(..),Color
               ,fontSize,cursorColor,backColor,initTatePos,initYokoPos
               ,dotSize,colorPallet,statusPos,imageNames)
@@ -26,28 +26,28 @@ import MyData (State(..),Active(..),Attr(..),Jumping(..),WMode(..),FMode(..)
 type IsCursor = Bool
 
 myDraw :: (MonadIO m) => Renderer -> [Font] -> [Texture] 
-                              -> TextData -> Bool -> State -> m () 
-myDraw re fonts itex textData isOnlyMouse st = do
+                              -> [TextData] -> Bool -> State -> m () 
+myDraw re fonts itex textDatas isOnlyMouse st = do
   let ac = act st 
-      (dtsSt,drwSt,imgSt,atrSt,tpsSt,wmdSt,ifmSt,icrSt) =
-        (dts ac,drw st,img st,atr st,tps ac,wmd st,ifm st,icr ac)
+      (dtsSt,drwSt,imgSt,iszSt,atrSt,tpsSt,wmdSt,ifmSt,icrSt) =
+        (dts ac,drw st,img st,isz st,atr st,tps ac,wmd st,ifm st,icr ac)
       scrAt = scr atrSt
       iniPos = if wmdSt==T then initTatePos else initYokoPos
   initDraw re
   statusDraw re (fonts!!1) st 
-  unless isOnlyMouse $ textsDraw re fonts fontSize wmdSt ifmSt icrSt tpsSt textData
+  unless isOnlyMouse $ textsDraw re fonts fontSize wmdSt ifmSt icrSt tpsSt textDatas
   when (tpsSt==0 && icrSt && not ifmSt) $ cursorDraw re (iniPos+scrAt) wmdSt (fromIntegral fontSize) 
   dotsDraw re scrAt dtsSt
   myDrawing re drwSt
-  imageDraw re itex imgSt
+  imageDraw re itex iszSt imgSt
   present re
 
-imageDraw :: (MonadIO m) => Renderer -> [Texture] -> [Img] -> m ()
-imageDraw re itex = mapM_ (\(Img pos siz rot name) -> 
+imageDraw :: (MonadIO m) => Renderer -> [Texture] -> [Size] -> [Img] -> m ()
+imageDraw re itex iszSt = mapM_ (\(Img pos siz rot name) -> 
   when (name `elem` imageNames) $ do
             let ind = getIndex name imageNames
-            (TextureInfo _ _ twd thi) <- queryTexture (itex!!ind)
-            copyEx re (itex!!ind) (Just (Rectangle (P (V2 0 0)) (V2 twd thi)))
+                dSize = iszSt!!ind
+            copyEx re (itex!!ind) (Just (Rectangle (P (V2 0 0)) dSize))
                                   (Just (Rectangle (P pos) siz))
                                   (fromIntegral rot) Nothing (V2 False False) ) 
 
@@ -108,32 +108,32 @@ statusDraw re font st = do
   
 
 textsDraw :: (MonadIO m) => Renderer -> [Font] -> PointSize -> WMode 
-        -> IsFormat -> IsCursor -> TextPos -> TextData -> m () 
+        -> IsFormat -> IsCursor -> TextPos -> [TextData] -> m () 
 textsDraw _ _ _ _ _ _ _ [] = return () 
-textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
+textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt (TD iCur tx nat pList:xs) = do
   let (scrAt,fszAt,fcoAt,fmdAt) = (scr nat,fsz nat,fco nat,fmd nat)
       ofs = fromIntegral dfsz 
       fs = fromIntegral fszAt
       fnum = case fmdAt of Min -> 0; Got -> 1; Ost -> 2; Azu -> 3;
-      nscr = if null xs then scrAt else let (_,_,nxtAtr,_) = head xs in scr nxtAtr
+      nscr = if null xs then scrAt else let (TD _ _ nxtAtr _) = head xs in scr nxtAtr
       rpText = T.replace "\n" "  " tx
       rpText2 = T.replace "\t" "　" $ 
                 T.replace "\r" "　" $
                 T.replace "\n" "　" tx
 
-      lPos = snd$last pList
+      CP _ _ lPos = last pList
 --      (txPListHalf,txPListWhole) =
 --           partition (\(_,((b,_),_)) -> b) (zip (T.unpack rpText2) pList)
 --      (tx', pListWhole) = first T.pack $ unzip txPListWhole
       (tx',pListWhole) = if fnum==0 then first T.pack $ unzip $
-              filter (\(_,((b,_),_)) -> not b) (zip (T.unpack rpText2) pList)
+              filter (\(_,CP b _ _) -> not b) (zip (T.unpack rpText2) pList)
                                 else (tx, pList)
       fText = case fnum of 0 -> tx'; 1 -> tx; 2 -> rpText; 3 -> rpText2; _ -> tx;
       fnum' = if fnum > 3 then 1 else fnum
   when (tx'/=T.empty) $ do
         fontS <- blended (fonts!!fnum') fcoAt fText 
         fontT <- createTextureFromSurface re fontS
-        foldM_ (\ ps ((b,r),pd) -> do
+        foldM_ (\ ps (CP b r pd) -> do
           let sz = if b then ofs `div` 2 else ofs
           copyEx re fontT 
             (Just (Rectangle (P ps) (V2 sz ofs)))
@@ -148,7 +148,7 @@ textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt ((iCur,tx,nat,pList):xs) = do
         (sz,szh) <- size (fonts!!4) "a"
         let (fszX,fszY) = (fromIntegral sz, fromIntegral szh)
         fontT2 <- createTextureFromSurface re fontS2
-        foldM_ (\ ps ((b,r),pd) -> do
+        foldM_ (\ ps (CP b r pd) -> do
  --         let sz = if b then ofs `div` 2 else ofs
           when b $ do
             copyEx re fontT2 

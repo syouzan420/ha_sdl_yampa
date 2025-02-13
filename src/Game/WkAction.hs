@@ -63,7 +63,7 @@ getText (tx:txs) acc =
    in if ch==':' then (T.unlines acc,tx:txs) 
                  else getText txs (acc++[tx]) 
 
-makeWkTextData :: Waka -> MD.TextData
+makeWkTextData :: Waka -> [MD.TextData]
 makeWkTextData wk =
   let (stxWk,scrWk,tmdWk,rctWk,mgnWk,ltwWk,lnwWk,fszWk) 
         = (stx wk,scr wk,tmd wk,rct wk,mgn wk,ltw wk,lnw wk,fsz wk)
@@ -79,5 +79,5 @@ makeWkTextData wk =
       initPos = V2 (ww-rm'-fromIntegral fszWk) tm'
       atr' = MD.initAttr{MD.gps=initPos+scrWk,MD.scr=scrWk, MD.ltw=ltwWk
                ,MD.lnw=lnwWk,MD.fsz=fszWk}
-   in makeTexts 0 True MD.T 0 sTps windowSize mgn' atr' T.empty stxWk 
+   in makeTexts 0 True MD.T [] 0 sTps windowSize mgn' atr' T.empty stxWk 
 

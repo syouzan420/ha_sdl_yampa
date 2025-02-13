@@ -1,12 +1,14 @@
 10 10 64 128 50 ("block_ho") drawImage
 OK.
+OK.
 0 0 640 480 0 ("raipuni_fig2") drawImage
 OK.
-OK.
+clear
 OK.
 OK.OK.
 ```a oneBlock :: k i
 clear
+OK.
 4 color
 1 lineSize
 3 grid
@@ -18,7 +20,9 @@ clear
 ```
 run
 OK.
+OK.
 2 oneBlock
+OK.
 OK.
 abc :: k = 3
 OK.

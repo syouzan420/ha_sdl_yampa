@@ -83,11 +83,12 @@ textMode re fonts surfs mapTex inp = do
       nStx = if isShowing then stxWk <> addText else stxWk
       ntps = if isShowing then tpsWk+addTps else tpsWk
       nwk = wk{stx=nStx,tps=ntps}
-      textData = makeWkTextData nwk
-  wkDraw re fonts surfs mapTex textData nwk
+      textDatas = makeWkTextData nwk
+  wkDraw re fonts surfs mapTex textDatas nwk
   when isEvent $ liftIO $ print eventText
-  let (_,_,lAtr,_) = if null textData then (False,T.empty,MD.initAttr,[]) 
-                                      else last textData 
+  let (MD.TD _ _ lAtr _) = 
+        if null textDatas then MD.TD False T.empty MD.initAttr [] 
+                          else last textDatas 
   let nscr = MD.scr lAtr
   let isStart = isStop && inp==Sp
   let nstx' = if isStart && tmdWk==0 then T.empty else nStx
@@ -107,7 +108,7 @@ mapMode re fonts surfs mapTex inp = do
   wk <- S.get
   let (chsWk,plnWk,mpsWk,mrpWk,gmpWk,tszWk) 
             = (chs wk,pln wk,mps wk,mrp wk,gmp wk,tsz wk) 
-      textData = makeWkTextData wk
+      textDatas = makeWkTextData wk
       chP = chsWk!!plnWk
       (pdrCh,ppsCh,prpCh,pacCh,pimCh) =
                  (cdr chP, cps chP, crp chP, cac chP, icm chP)
@@ -127,7 +128,7 @@ mapMode re fonts surfs mapTex inp = do
                                                                     chs' chaDelay
       nmrp = if iss then nprp else mrpWk
       nwk = wk{mps=nmps,mrp=nmrp,chs=nchs,isc=iss}
-  wkDraw re fonts surfs mapTex textData nwk
+  wkDraw re fonts surfs mapTex textDatas nwk
 --  when iss $ liftIO $ putStrLn (show nmps ++ " " ++ show npps ++ " " ++show nprp++" "++ show iss)
   S.put nwk
 

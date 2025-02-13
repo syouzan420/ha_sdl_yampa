@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module MyData (Pos,Color,Mgn,Size,PList,TextPos,TextData,IsFormat,Dot,Code,Dig
+module MyData (Pos,Color,Mgn,Size,ChPos(..),TextPos,TextData(..),IsFormat,Dot,Code,Dig
               ,Jump,FrJp,JBak,PointSize
               ,Dt(..),Li(..),Rc(..),Cr(..),Shp(..),Drw(..),Img(..)
               ,Modif(..),State(..),Active(..),Attr(..),Coding(..),Rubi(..),Jumping(..)
@@ -28,8 +28,9 @@ type Mgn = V4 CInt
 type PointSize = Int
 type Color = V4 Word8
 type Cnum = Int         -- color number
-type PList = ((Bool,Bool),Pos)
-type TextData = [(Bool,Text,Attr,[PList])]
+data ChPos = CP !Bool !Bool !Pos
+       -- IsChar hankaku?, IsChar Tate rotate?, CharPosition 
+data TextData = TD !Bool !Text !Attr ![ChPos] -- Bool:IsCursorPresent?
 type Dot = (Pos,Cnum)
 type Code = String
 type Name = String
@@ -59,6 +60,7 @@ data Img = Img !Pos !Size !CInt !Name deriving (Eq,Show) --Image: position, size
 -- act: active datas
 -- drw: drawing
 -- img: images 
+-- isz: image file sizes
 -- dig: digraphs
 -- com: command for normal mode
 -- atr: text attribute
@@ -71,8 +73,8 @@ data Img = Img !Pos !Size !CInt !Name deriving (Eq,Show) --Image: position, size
 -- isk: skk editing
 -- iup: need text update? (for example: after reading file) 
 
-data State = State{act :: !Active, drw :: ![Drw], img :: ![Img], dig :: ![Dig]
-                  ,cdn :: !Coding ,com :: !String
+data State = State{act :: !Active, drw :: ![Drw], img :: ![Img], isz :: ![Size]
+                  ,dig :: ![Dig],cdn :: !Coding ,com :: !String
                   ,wsz :: !Size, mgn :: !Mgn , atr :: !Attr
                   ,wmd :: !WMode, emd :: !EMode, cpl :: !Cnum, lsz :: !CInt
                   ,ifm :: !Bool, isk :: !Bool, iup :: !Bool}
@@ -195,8 +197,8 @@ initTatePos = V2 (winSizeX-60) 30
 -- INITIALIZE
 
 initState :: State
-initState = State {act = initActive, drw = [], img = [], dig = initDig 
-                  ,cdn = initCoding, com = ""
+initState = State {act = initActive, drw = [], img = [], isz = []
+                  ,dig = initDig, cdn = initCoding, com = ""
                   ,wsz = windowSize, mgn = margins, atr = initAttr
                   ,wmd = T,emd=Nor, cpl=1, lsz=1
                   ,ifm=False, isk=False, iup=False}

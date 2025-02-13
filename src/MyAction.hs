@@ -114,6 +114,7 @@ getCid :: Text -> (Int, (Text,Text))
 getCid tx =
   let (cm,rtx) = T.break (==' ') tx
       ncid = case cm of
+               "pic" -> 1
                "hi" -> 1
                "st" -> 1
                "qu" -> 1
@@ -135,16 +136,21 @@ exeAttrCom wmdSt fpsSt tpsSt (at,tx) =
         | cidAt>0 = case cnmAt of
                       "qu" -> breakLine tailTx
                       "hi" -> breakLine tailTx
+                      "st" -> T.break (==';') tailTx 
                       _    -> breakText tailTx
         | otherwise = T.break (==';') tailTx
       tln = T.length ttx
       tln' = fromIntegral tln
-      ttx' = case cnmAt of
+      rtx' = case cnmAt of
                 "st" -> case cidAt of
-                          1 -> T.take (tln-3) ttx
-                          _ -> ttx
-                _    -> ttx
+                          1 -> T.drop 3 rtx 
+                          _ -> rtx
+                _    -> rtx
       natr = case cnmAt of
+        "pic" -> case cidAt of 
+                  1 -> undefined
+                  0 -> undefined
+                  _ -> at
         "hi" -> case cidAt of
                   1 -> at{fsz=fszAt+3,fco=cursorColor}
                   0 -> at{fsz=fszAt-3,fco=fontColor}
@@ -194,7 +200,7 @@ exeAttrCom wmdSt fpsSt tpsSt (at,tx) =
                   _ -> at
         _    -> at{cnm=""}
       ncnm = if cidAt==0 then "" else cnmAt
-   in (natr{cnm=ncnm, cid=cidAt-1} , (if ite natr then "" else ttx', rtx))
+   in (natr{cnm=ncnm, cid=cidAt-1} , (if ite natr then "" else ttx, rtx'))
 
 textToJumpData :: FilePos -> TextPos -> Text -> Jump
 textToJumpData fpsSt tpsSt ttx = ((fpsSt,T.pack$show fpsSt),(tpsSt,ttx)) 

@@ -152,7 +152,8 @@ imageFiles :: [FilePath]
 imageFiles = map (\s -> "images/"++s++".png") imageNames 
 
 imageNames :: [String]
-imageNames = ["nori","onigiri","en2","en2_1","raipuni_fig2"] ++ blockNames
+imageNames = ["nori","onigiri","en2","en2_1","raipuni_fig2","raipuni_table2"]
+           ++ blockNames
 
 blockNames :: [String]
 blockNames = map ("block_"++) ["ho","midu","tama","arg"]

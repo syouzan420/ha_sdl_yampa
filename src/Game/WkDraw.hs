@@ -44,7 +44,7 @@ wkDraw re fonts surfs texture textDatas wk = do
       mapDraw re (head surfs) (gmp wk) mszWk tszWk mpsWk mrpWk acoWk
   when (ipl wk) $ do
       playerDraw re (surfs!!1) (tsz wk) plnWk plyWk mpsWk mrpWk iscWk acoWk
-  textsDraw re fonts fontSize T True False (tps wk) textDatas
+  textsDraw re fonts [] fontSize T True False [] (tps wk) textDatas
   present re
 
 playerDraw :: (MonadIO m) => Renderer -> [Surface] -> 

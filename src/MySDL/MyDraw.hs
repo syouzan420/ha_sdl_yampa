@@ -17,6 +17,7 @@ import Foreign.C.Types (CInt)
 import qualified Data.Text as T
 import Data.Text (pack)
 import General (getIndex)
+import MyAction (getPicIndex)
 import MyData (State(..),Active(..),Attr(..),Jumping(..),WMode(..),FMode(..)
               ,IsFormat,Dot,Pos,TextPos,TextData(..),ChPos(..),PointSize,Size
               ,Dt(..),Li(..),Rc(..),Cr(..),Shp(..),Drw(..),Img(..),Color
@@ -35,7 +36,8 @@ myDraw re fonts itex textDatas isOnlyMouse st = do
       iniPos = if wmdSt==T then initTatePos else initYokoPos
   initDraw re
   statusDraw re (fonts!!1) st 
-  unless isOnlyMouse $ textsDraw re fonts fontSize wmdSt ifmSt icrSt tpsSt textDatas
+  unless isOnlyMouse $
+       textsDraw re fonts itex fontSize wmdSt ifmSt icrSt iszSt tpsSt textDatas
   when (tpsSt==0 && icrSt && not ifmSt) $ cursorDraw re (iniPos+scrAt) wmdSt (fromIntegral fontSize) 
   dotsDraw re scrAt dtsSt
   myDrawing re drwSt
@@ -107,10 +109,11 @@ statusDraw re font st = do
   freeSurface fontS
   
 
-textsDraw :: (MonadIO m) => Renderer -> [Font] -> PointSize -> WMode 
-        -> IsFormat -> IsCursor -> TextPos -> [TextData] -> m () 
-textsDraw _ _ _ _ _ _ _ [] = return () 
-textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt (TD iCur tx nat pList:xs) = do
+textsDraw :: (MonadIO m) => Renderer -> [Font] -> [Texture] -> PointSize -> WMode 
+        -> IsFormat -> IsCursor -> [Size] -> TextPos -> [TextData] -> m () 
+textsDraw _ _ _ _ _ _ _ _ _ [] = return () 
+textsDraw re fonts itex dfsz wmdSt ifmSt icrSt iszSt tpsSt (TD iCur tx nat pList:xs)
+  = do
   let (scrAt,fszAt,fcoAt,fmdAt) = (scr nat,fsz nat,fco nat,fmd nat)
       ofs = fromIntegral dfsz 
       fs = fromIntegral fszAt
@@ -130,7 +133,15 @@ textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt (TD iCur tx nat pList:xs) = do
                                 else (tx, pList)
       fText = case fnum of 0 -> tx'; 1 -> tx; 2 -> rpText; 3 -> rpText2; _ -> tx;
       fnum' = if fnum > 3 then 1 else fnum
-  when (tx'/=T.empty) $ do
+      iShowPic = ifmSt && (T.take 4 tx' == "pic ")
+  when iShowPic $ do 
+        let iname = T.drop 4 tx'
+        let ind = getPicIndex iname
+        let (CP _ _ ipos) = head pList
+        when (ind>=0) $ 
+          imageDraw re itex iszSt
+               [Img (ipos+nscr) (iszSt!!ind) 0 (T.unpack iname)]   
+  when (tx'/=T.empty && not iShowPic) $ do
         fontS <- blended (fonts!!fnum') fcoAt fText 
         fontT <- createTextureFromSurface re fontS
         foldM_ (\ ps (CP b r pd) -> do
@@ -143,7 +154,7 @@ textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt (TD iCur tx nat pList:xs) = do
               ) (V2 0 0) pListWhole
         destroyTexture fontT
         freeSurface fontS
-  when (tx/=T.empty && fnum==0) $ do
+  when (tx/=T.empty && fnum==0 && not iShowPic) $ do
         fontS2 <- blended (fonts!!4) fcoAt tx
         (sz,szh) <- size (fonts!!4) "a"
         let (fszX,fszY) = (fromIntegral sz, fromIntegral szh)
@@ -161,7 +172,7 @@ textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt (TD iCur tx nat pList:xs) = do
         destroyTexture fontT2
         freeSurface fontS2
   when (iCur && icrSt && not ifmSt) $ cursorDraw re (lPos+nscr) wmdSt fs 
-  textsDraw re fonts dfsz wmdSt ifmSt icrSt tpsSt xs
+  textsDraw re fonts itex dfsz wmdSt ifmSt icrSt iszSt tpsSt xs
 
 initDraw :: MonadIO m => Renderer -> m ()
 initDraw re = do

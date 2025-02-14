@@ -1,10 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module MyAction (myAction,beforeDraw,afterDraw,makePList,changeAtr
-                ,exeAttrCom,makeTextData,makeTexts,getCid) where
+                ,exeAttrCom,makeTextData,makeTexts,getCid,getPicIndex) where
 
 import Data.Text (Text,uncons)
 import qualified Data.Text as T
---import Foreign.C.Types (CInt)
 import SDL.Vect (V2(..),V4(..))
 import Data.Maybe(fromMaybe)
 import Data.List(elemIndex)
@@ -125,6 +124,12 @@ getCid tx =
                _    -> 0
    in (ncid, (cm, rtx))
 
+getPicIndex :: Text -> Int
+getPicIndex tx = let name = T.unpack tx 
+                  in if name `elem` imageNames 
+                           then getIndex name imageNames
+                           else (-1) 
+
 exeAttrCom :: WMode -> [Size] -> FilePos 
                       -> TextPos -> (Attr,Text) -> (Attr, (Text, Text))
 exeAttrCom wmdSt iszSt fpsSt tpsSt (at,tx) = 
@@ -143,6 +148,11 @@ exeAttrCom wmdSt iszSt fpsSt tpsSt (at,tx) =
         | otherwise = T.break (==';') tailTx
       tln = T.length ttx
       tln' = fromIntegral tln
+      ttx' = case cnmAt of
+                "pic" -> case cidAt of
+                          1 -> "pic " <> ttx 
+                          _ -> ttx
+                _     -> ttx
       rtx' = case cnmAt of
                 "st" -> case cidAt of
                           1 -> T.drop 3 rtx 
@@ -150,10 +160,9 @@ exeAttrCom wmdSt iszSt fpsSt tpsSt (at,tx) =
                 _    -> rtx
       natr = case cnmAt of
         "pic" -> case cidAt of 
-                  1 -> let name = T.unpack ttx 
-                           (V2 iwd ihi) = if name `elem` imageNames 
-                              then iszSt!!getIndex name imageNames
-                              else V2 0 0
+                  1 -> let ind = getPicIndex ttx
+                           (V2 iwd ihi) = if ind>=0
+                              then iszSt!!ind else V2 0 0
                         in at{gps=if wmdSt==T then gpsAt-V2 iwd 0 
                                               else gpsAt+V2 0 ihi}
                   _ -> at
@@ -206,7 +215,7 @@ exeAttrCom wmdSt iszSt fpsSt tpsSt (at,tx) =
                   _ -> at
         _    -> at{cnm=""}
       ncnm = if cidAt==0 then "" else cnmAt
-   in (natr{cnm=ncnm, cid=cidAt-1} , (if ite natr then "" else ttx, rtx'))
+   in (natr{cnm=ncnm, cid=cidAt-1} , (if ite natr then "" else ttx', rtx'))
 
 textToJumpData :: FilePos -> TextPos -> Text -> Jump
 textToJumpData fpsSt tpsSt ttx = ((fpsSt,T.pack$show fpsSt),(tpsSt,ttx)) 

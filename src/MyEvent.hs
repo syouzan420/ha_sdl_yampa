@@ -27,9 +27,11 @@ inputEvent _ = do
     Just (InpRes kc md it mps isc ised _) -> do
       st <- S.get
       let (actSt,cdnSt) = (act st, cdn st) 
-          (texSt,etxSt,dtsSt,tpsSt,dfnSt,digSt,comSt,wszSt,mgnSt,atrSt,emdSt,wmdSt,cplSt,ifmSt,iskSt)
-            = (tex actSt,etx actSt,dts actSt,tps actSt,dfn cdnSt
-              ,dig st,com st,wsz st,mgn st,atr st,emd st,wmd st,cpl st,ifm st,isk st)
+          (texSt,etxSt,dtsSt,tpsSt,dfnSt,digSt,comSt,wszSt,mgnSt,atrSt,emdSt
+                ,wmdSt,cplSt,ifmSt,iskSt,iblSt) = 
+            (tex actSt,etx actSt,dts actSt,tps actSt,dfn cdnSt
+              ,dig st,com st,wsz st,mgn st,atr st,emd st,wmd st,cpl st
+              ,ifm st,isk st,ibl st)
           isKeyPressed = kc/=KeycodeUnknown
           isMousePressed = mps/=V2 (-1) (-1)
           isQuit = kc==KeycodeEscape   -- ESC Key
@@ -82,6 +84,7 @@ inputEvent _ = do
 
           isDrawClear = kc==KeycodeD && md==Ctr
           isTglColor = kc==KeycodeC && md==Ctr
+          isTglBlank = kc==KeycodeB && md==Ctr
 
 
           isJump = ifmSt && isRet && (sjn.jmp) atrSt>=0
@@ -220,6 +223,9 @@ inputEvent _ = do
             | isSkkEdit = True
             | iskSt && it/=T.empty = False 
             | otherwise = iskSt
+          nibl
+            | isTglBlank = not iblSt
+            | otherwise = iblSt
           ninp
             | isNewFile = NFL
             | isLoadFile = LFL
@@ -235,7 +241,7 @@ inputEvent _ = do
           nactSt = actSt{tex=ntex,etx=netx,dts=ndts,tps=ntps}
           isTpsUpdate = tpsSt /= ntps
           nst = st{act=nactSt,cdn=cdnSt{cod=ncod},com=ncom,atr=natr
-                  ,emd=nemd,wmd=nwmd,cpl=ncpl,ifm=nifm,isk=nisk}
+                  ,emd=nemd,wmd=nwmd,cpl=ncpl,ifm=nifm,isk=nisk,ibl=nibl}
       S.put nst
       when isToIns $ startTextInput (Rect 0 0 50 50)
       when isToNor stopTextInput

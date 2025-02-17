@@ -72,12 +72,13 @@ data Img = Img !Pos !Size !CInt !Name deriving (Eq,Show) --Image: position, size
 -- ifm: view formatted text or not
 -- isk: skk editing
 -- iup: need text update? (for example: after reading file) 
+-- ibl: blank mode? (for drawing)
 
 data State = State{act :: !Active, drw :: ![Drw], img :: ![Img], isz :: ![Size]
                   ,dig :: ![Dig],cdn :: !Coding ,com :: !String
                   ,wsz :: !Size, mgn :: !Mgn , atr :: !Attr
                   ,wmd :: !WMode, emd :: !EMode, cpl :: !Cnum, lsz :: !CInt
-                  ,ifm :: !Bool, isk :: !Bool, iup :: !Bool}
+                  ,ifm :: !Bool, isk :: !Bool, iup :: !Bool, ibl :: !Bool}
 
 -- tex: edit text
 -- etx: editing text for Kanji-Henkan
@@ -178,7 +179,7 @@ rubiSize :: PointSize
 rubiSize = 9 
 
 dotSize :: CInt
-dotSize = 5
+dotSize = 3
 
 initLetterWidth, initLineWidth :: CInt
 initLetterWidth = 24; initLineWidth = 32
@@ -202,7 +203,7 @@ initState = State {act = initActive, drw = [], img = [], isz = []
                   ,dig = initDig, cdn = initCoding, com = ""
                   ,wsz = windowSize, mgn = margins, atr = initAttr
                   ,wmd = T,emd=Nor, cpl=1, lsz=1
-                  ,ifm=False, isk=False, iup=False}
+                  ,ifm=False, isk=False, iup=False, ibl=False}
 
 initActive :: Active
 initActive = Active {tex = T.empty, etx = T.empty, dts = [] 

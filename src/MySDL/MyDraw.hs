@@ -30,13 +30,13 @@ myDraw :: (MonadIO m) => Renderer -> [Font] -> [Texture]
                               -> [TextData] -> Bool -> State -> m () 
 myDraw re fonts itex textDatas isOnlyMouse st = do
   let ac = act st 
-      (dtsSt,drwSt,imgSt,iszSt,atrSt,tpsSt,wmdSt,ifmSt,icrSt) =
-        (dts ac,drw st,img st,isz st,atr st,tps ac,wmd st,ifm st,icr ac)
+      (dtsSt,drwSt,imgSt,iszSt,atrSt,tpsSt,wmdSt,ifmSt,icrSt,iblSt) =
+        (dts ac,drw st,img st,isz st,atr st,tps ac,wmd st,ifm st,icr ac,ibl st)
       scrAt = scr atrSt
       iniPos = if wmdSt==T then initTatePos else initYokoPos
   initDraw re
   statusDraw re (fonts!!1) st 
-  unless isOnlyMouse $
+  unless (isOnlyMouse || iblSt) $
        textsDraw re fonts itex fontSize wmdSt ifmSt icrSt iszSt tpsSt textDatas
   when (tpsSt==0 && icrSt && not ifmSt) $ cursorDraw re (iniPos+scrAt) wmdSt (fromIntegral fontSize) 
   dotsDraw re scrAt dtsSt
@@ -74,11 +74,46 @@ drawShape re col siz (D (Dt ps)) =
   if siz==1 then drawPoint re (P ps) else fillCircle re ps (siz-1) col
 
 dotsDraw :: (MonadIO m) => Renderer -> Pos -> [Dot] -> m () 
-dotsDraw re (V2 sx sy) = mapM_ (\(V2 x y,cn) -> do
-  let ds = dotSize
-  rendererDrawColor re $= colorPallet!!cn 
-  fillRect re (Just (Rectangle (P (V2 (x*ds+sx) (y*ds+sy))) (V2 ds ds)))
-                    ) 
+dotsDraw re (V2 sx sy) dots = do 
+  mapM_ (\(V2 x y,cn) -> do
+    let ds = dotSize
+    rendererDrawColor re $= colorPallet!!cn 
+    fillRect re (Just (Rectangle (P (V2 (x*ds+sx) (y*ds+sy))) (V2 ds ds)))
+                               ) dots 
+--  diaDraw re (V2 sx sy) dots
+
+{--
+diaDraw :: (MonadIO m) => Renderer -> Pos -> [Dot] -> m ()
+diaDraw _ _ [] = return ()
+diaDraw re s ((p,_):ds) = do diagonalDraw re s p ds
+                             diaDraw re s ds
+
+findTriangle :: Pos -> Pos -> Maybe ((Pos,Pos,Pos),(Pos,Pos,Pos))
+findTriangle (V2 x y) (V2 x1 y1)
+  | x1 == x+1 && y1 == y-1 = Just ((V2 px py,V2 tx py,V2 tx ty)
+                                  ,(V2 tx py,V2 tx (py+ds),V2 (tx+ds) py))
+  | x1 == x-1 && y1 == y-1 = Just ((V2 px ty,V2 px py,V2 (px+ds) py)
+                                  ,(V2 tx py,V2 px (py+ds),V2 px py))
+  | x1 == x-1 && y1 == y+1 = Just ((V2 px py,V2 tx ty,V2 px ty)
+                                  ,(V2 px ty,V2 px (ty+ds),V2 (px+ds) ty))
+  | x1 == x+1 && y1 == y+1 = Just ((V2 px ty,V2 tx (ty+ds),V2 tx ty)
+                                  ,(V2 tx py,V2 tx ty,V2 (tx+ds) ty))
+  | otherwise = Nothing
+  where ds = dotSize
+        px = x*ds; py = y*ds; tx = x1*ds; ty = y1*ds
+
+diagonalDraw :: (MonadIO m) => Renderer -> Pos -> Pos -> [Dot] -> m ()
+diagonalDraw _ _ _ [] = return ()
+diagonalDraw re s pos0 ((pos1,cn):xs) = do
+  let tri = findTriangle pos0 pos1
+  let col = colorPallet!!cn
+  let nextCheck = diagonalDraw re s pos0 xs
+  case tri of
+    Just ((p0,p1,p2),(p3,p4,p5)) -> do fillTriangle re (p0+s) (p1+s) (p2+s) col
+                                       fillTriangle re (p3+s) (p4+s) (p5+s) col
+                                       nextCheck
+    Nothing -> nextCheck
+--}
 
 cursorDraw :: (MonadIO m) => Renderer -> Pos -> WMode -> CInt -> m () 
 cursorDraw re (V2 x y) wm sz = do

@@ -60,9 +60,10 @@ makeTexts ind ifmSt wmdSt iszSt fpsSt tpsSt wszSt mgnSt atrSt etxSt texSt =
           lnTex = T.length texSt 
           preInc = lnTex - T.length pxs2 + 1
           iCur = tpsSt > ind && tpsSt < ind + preInc
-          (iptx,tptx) = if iCur && tpsSt>0 then T.splitAt (tpsSt-ind) ptx2
-                                           else (ptx2,T.empty) 
-          (tx,xs) = if iCur then (iptx<>etxSt,tptx<>pxs2) else (ptx2,pxs2)
+          (iptx,tptx) = if iCur && not ifmSt && tpsSt>0 
+                            then T.splitAt (tpsSt-ind) ptx2 else (ptx2,T.empty) 
+          (tx,xs) = if iCur && not ifmSt 
+                            then (iptx<>etxSt,tptx<>pxs2) else (ptx2,pxs2)
           (scrAt,fszAt) = (scr natr,fsz natr)
           fs = fromIntegral fszAt
           pList = makePList wmdSt wszSt mgnSt natr tx

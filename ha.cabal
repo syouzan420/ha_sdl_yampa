@@ -40,6 +40,7 @@ library
       Game.WkOutput
       Game.WkVideo
       General
+      Keys
       Mana.Mana
       Mana.MyTree
       MyAction

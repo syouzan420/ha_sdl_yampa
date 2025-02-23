@@ -1,19 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 module MyEvent (inputEvent,initInput) where
 
-import MySDL.MyInput (myInput,InpRes(..))
 import Linear.V2 (V2(..))
 import Linear.V4 (V4(..))
 import qualified Control.Monad.State.Strict as S
 import Control.Monad (when)
 import qualified Data.Text as T
-import MyData (State(..),Active(..),Attr(..),Coding(..),Jumping(..),Modif(..),WMode(..),EMode(..),FMode(..),Input(..),initYokoPos,initTatePos,colorPallet)
-import MyLib (tpsForRelativeLine,locToIndex,toDotPos,addMidDots,selectNearest,textIns,lastTps,takeCurrentLine,deleteCurrentLine,headTps,toDig)
+import MyData (State(..),Active(..),Attr(..),Coding(..),Jumping(..),Modif(..)
+              ,WMode(..),EMode(..),FMode(..),Input(..)
+              ,initYokoPos,initTatePos,colorPallet)
+import MyLib (tpsForRelativeLine,locToIndex,toDotPos,addMidDots,selectNearest
+             ,textIns,lastTps,takeCurrentLine,deleteCurrentLine,headTps,toDig)
 import Mana.Mana (evalCode,taiyouMn,Mn(..),Yo(..),Dtype(..),preDef,userDef)
-import SDL.Raw.Types (Rect(..))
-import SDL.Input.Keyboard (startTextInput,stopTextInput)
-import SDL.Input.Keyboard.Codes
 import FRP.Yampa (DTime)
+import Connector (myInput,InpRes(..),Rect(..),startTextInput,stopTextInput)
+import SDL.Input.Keyboard.Codes
 
 initInput :: S.StateT State IO (Input,Bool) 
 initInput = return (NON,False)

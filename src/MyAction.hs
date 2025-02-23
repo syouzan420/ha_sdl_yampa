@@ -4,7 +4,8 @@ module MyAction (myAction,beforeDraw,afterDraw,makePList,changeAtr
 
 import Data.Text (Text,uncons)
 import qualified Data.Text as T
-import SDL.Vect (V2(..),V4(..))
+import Linear.V2(V2(..))
+import Linear.V4(V4(..))
 import Data.Maybe(fromMaybe)
 import Data.List(elemIndex)
 import General (getIndex)

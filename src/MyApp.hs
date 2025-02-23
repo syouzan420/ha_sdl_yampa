@@ -1,13 +1,11 @@
 module MyApp(appMain) where
 
 import qualified Control.Monad.State.Strict as S
-import SDL.Input.Keyboard (stopTextInput)
 import FRP.Yampa (identity,reactimate)
-import MySDL.MyLoad (myLoad,Loaded(..))
-import MySDL.MyOutput (myOut)
-import MySDL.MyInit (withMyInit)
-import MySDL.MyInitVideo (withMyVideo,getImageSize)
+import Connector(stopTextInput,myLoad,Loaded(..)
+                ,withMyInit,withMyVideo,getImageSize)
 import MyEvent (inputEvent,initInput)
+import MyOutput (myOut)
 import MyData (initState,initActive,initAttr,initJumping
               ,State(..),Active(..),Attr(..),Jumping(..))
 

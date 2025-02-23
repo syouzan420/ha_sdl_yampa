@@ -12,12 +12,13 @@ import Sound.OpenAL.AL.Source (Source,loopingMode,LoopingMode(..),queueBuffers,p
 import Data.StateVar (($=))
 import Data.Maybe (fromMaybe)
 import Foreign.C.Types (CInt)
-import SDL.Font (Font)
-import SDL.Video.Renderer (Renderer,Texture,Surface
-                          ,createTextureFromSurface,destroyTexture)
-import SDL.Vect (V2(..))
-import SDL.Time (delay)
+--import SDL.Font (Font)
+import SDL.Video.Renderer (Surface,createTextureFromSurface,destroyTexture)
+import Linear.V2 (V2(..))
+--import SDL.Vect (V2(..))
+--import SDL.Time (delay)
 import qualified MyData as MD
+import Connector (Font,Renderer,Texture,delay)
 import MyAction (getCid)
 import General (getLastChar,toList)
 import Game.WkDraw (wkDraw)

@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Block
+      Connector
       Game.WkAction
       Game.WkAudio
       Game.WkAudio2
@@ -48,13 +49,14 @@ library
       MyEvent
       MyFile
       MyLib
+      MyOutput
       MySDL.MyAudio
       MySDL.MyDraw
       MySDL.MyInit
       MySDL.MyInitVideo
       MySDL.MyInput
       MySDL.MyLoad
-      MySDL.MyOutput
+      SDLDriver
   other-modules:
       Paths_ha
   hs-source-dirs:

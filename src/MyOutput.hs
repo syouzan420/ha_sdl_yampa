@@ -1,16 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
-module MySDL.MyOutput (myOut) where
+module MyOutput (myOut) where
 
 import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO,liftIO)
 import qualified Control.Monad.State.Strict as S
-import SDL.Font (Font)
-import SDL.Video.Renderer (Renderer,Texture)
-import SDL.Time (delay)
 import qualified Data.Text as T
 import System.Directory (doesFileExist)
 import Linear.V2 (V2(..))
-import MySDL.MyDraw (myDraw)
 import MyData (State(..),Active(..),Attr(..),Coding(..),Jumping(..),Dot,Input(..)
               ,JBak,FrJp,TextData(..)
               ,delayTime,textFileName,textPosFile,dotFileName,jumpNameFile)
@@ -18,6 +14,7 @@ import MyAction (beforeDraw,afterDraw,makeTextData)
 import MyLib (textToDots,dotsToText,jumpsToText)
 import MyFile (fileRead,fileWrite)
 import MyCode (exeCode)
+import Connector(Font,Renderer,Texture,delay,myDraw)
 import General (isLastElem)
 import Game.WkMain (runWaka)
 

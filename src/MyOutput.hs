@@ -8,7 +8,7 @@ import qualified Data.Text as T
 import System.Directory (doesFileExist)
 import Linear.V2 (V2(..))
 import MyData (State(..),Active(..),Attr(..),Coding(..),Jumping(..),Dot,Input(..)
-              ,JBak,FrJp,TextData(..)
+              ,JBak,FrJp,TextData(..),Jump
               ,delayTime,textFileName,textPosFile,dotFileName,jumpNameFile)
 import MyAction (beforeDraw,afterDraw,makeTextData)
 import MyLib (textToDots,dotsToText,jumpsToText)
@@ -29,7 +29,7 @@ type JBacks = [JBak]
 data CFile = CFile !HaText !FileNum !TextPos !Dots !Bool !JBacks
 
 myOut :: Renderer -> [Font] -> [Texture] -> Bool -> (Input,Bool) 
-                                                -> S.StateT State IO Bool 
+                                                -> (S.StateT State IO) Bool 
 myOut re fonts itexs _ (inp,isUpdateTps) = do
   st <- S.get
   let actSt = act st
@@ -37,17 +37,15 @@ myOut re fonts itexs _ (inp,isUpdateTps) = do
       ncrc = if isUpdateTps then 0 else crc actSt
       bst = beforeDraw st{act=actSt{crc=ncrc,icr=nicr},cdn=(cdn st){ipr=True}}
       bcdnSt = cdn bst
-  S.put bst
 
-  when (inp==EXE) $ mapM_ exeCode (cod bcdnSt) 
+      cst = if inp==EXE then foldr exeCode bst (cod bcdnSt) else bst
 
-  cst <- S.get
-  let ccdnSt = cdn cst
+      ccdnSt = cdn cst
       msgSt = msg ccdnSt
-  when (isLastElem msgSt "codeExe") $ mapM_ exeCode (cod ccdnSt) 
+      cst' = if isLastElem msgSt "codeExe" then foldr exeCode cst (cod ccdnSt) 
+                                           else cst
   
-  cst' <- S.get
-  let cactSt' = act cst'
+      cactSt' = act cst'
       isUpdateText = tex actSt /= tex cactSt' || icr actSt /= icr cactSt' 
           || isUpdateTps || inp==PKY || iup cst' || etx actSt /= etx cactSt' 
       isUpdateDraw = inp==PMO || inp==EXE || isUpdateText
@@ -57,8 +55,10 @@ myOut re fonts itexs _ (inp,isUpdateTps) = do
       natr = if null textDatas then atr cst' else getAtr textDatas
       nscr = if inp==NFL || inp==LFL || inp==JMP then V2 0 0 else scr natr
       jmpAt = jmp natr
-      (njps,nfjp,jbkAt,nsjn,fpsSt) = 
-          (jps jmpAt, fjp jmpAt, jbk jmpAt, sjn jmpAt, fps cactSt')
+      njps = jps jmpAt; nfjp = fjp jmpAt; jbkAt = jbk jmpAt; nsjn = sjn jmpAt
+      fpsSt = fps cactSt'
+--      (njps,nfjp,jbkAt,nsjn,fpsSt) = 
+--          (jps jmpAt, fjp jmpAt, jbk jmpAt, sjn jmpAt, fps cactSt')
 
       isLoadTgt = isLastElem msgSt "loadFile"
       tFjp = if isLoadTgt then read (last (init msgSt)) else 0
@@ -98,12 +98,14 @@ myOut re fonts itexs _ (inp,isUpdateTps) = do
   delay delayTime
 
   S.put nst 
-  if inp==QIT then do 
-    fileWriteR fpsSt nst
-    fileWrite textPosFile (T.pack$unwords [show ((fps.act) nst),show ((tps.act) nst)])
+  if inp==QIT then quitHa fpsSt njps nst else return False
+
+quitHa :: (MonadIO m) => Int -> [Jump] -> State -> m Bool
+quitHa fpsSt njps st = do
+    fileWriteR fpsSt st
+    fileWrite textPosFile (T.pack$unwords [show ((fps.act) st),show ((tps.act) st)])
     fileWrite jumpNameFile (jumpsToText njps)
     return True 
-              else return False
 
 newFile :: (MonadIO m) => Int -> [JBak] -> State -> m CFile 
 newFile fpsSt jbkAt st = do

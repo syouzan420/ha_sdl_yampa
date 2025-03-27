@@ -154,7 +154,8 @@ imageFiles = map (\s -> "images/"++s++".png") imageNames
 
 imageNames :: [String]
 imageNames = ["nori","onigiri","en2","en2_1","raipuni_fig2","raipuni_table2"
-             ,"raipuni_fig3","raipuni_fig4","raipuni_table3"]
+             ,"raipuni_fig3","raipuni_fig4","raipuni_table3","raipuni_fig5"
+             ,"raipuni_fig6","raipuni_fig7"]
            ++ blockNames
 
 blockNames :: [String]

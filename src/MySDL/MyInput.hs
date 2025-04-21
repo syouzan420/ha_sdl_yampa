@@ -5,7 +5,8 @@ import SDL.Event (EventPayload(KeyboardEvent,TextInputEvent,TextEditingEvent
                  ,eventPayload,keyboardEventKeyMotion
                  ,InputMotion(Pressed,Released),keyboardEventKeysym,pollEvents
                  ,TextInputEventData(textInputEventText),TextEditingEventData(textEditingEventText)
-                 ,MouseButtonEventData(mouseButtonEventMotion,mouseButtonEventPos)
+                 ,MouseButtonEventData(mouseButtonEventMotion
+                                ,mouseButtonEventPos,mouseButtonEventButton)
                  ,MouseMotionEventData(mouseMotionEventState,mouseMotionEventPos)
                  ,MouseButton(ButtonLeft))
 import SDL.Input.Keyboard (Keysym(keysymKeycode,keysymModifier),KeyModifier(..)
@@ -19,7 +20,7 @@ import Data.List(find)
 import Foreign.C.Types(CInt)
 import MyData(Modif(..))
 
-data InpRes = InpRes !Keycode !Modif !T.Text !(V2 CInt) !Bool !Bool !Bool 
+data InpRes = InpRes !Keycode !Modif !T.Text !(V2 CInt,V2 CInt) !(Bool,Bool) !Bool !Bool 
   
 myInput :: MonadIO m => m (Maybe InpRes) 
 myInput = do
@@ -56,15 +57,29 @@ myInput = do
                 if mouseButtonEventMotion mouseButtonEvent == Pressed
                     then mouseButtonEventPos mouseButtonEvent
                     else P (V2 (-1) (-1))
+--              MouseMotionEvent mouseMotionEvent ->
+--                                  mouseMotionEventPos mouseMotionEvent
               MouseMotionEvent mouseMotionEvent ->
                 if mouseMotionEventState mouseMotionEvent == [ButtonLeft]
                     then mouseMotionEventPos mouseMotionEvent
                     else P (V2 (-1) (-1))
               _other                            -> P (V2 (-1) (-1))
-          mmtn event = 
+
+          motn event = 
+            case eventPayload event of
+              MouseMotionEvent mouseMotionEvent ->
+                            mouseMotionEventPos mouseMotionEvent
+              _other                            -> P (V2 (-1) (-1))
+
+          mmcl event =
             case eventPayload event of
               MouseButtonEvent mouseButtonEvent ->
-                mouseButtonEventMotion mouseButtonEvent /= Pressed 
+                mouseButtonEventButton mouseButtonEvent == ButtonLeft
+          --      mouseButtonEventMotion mouseButtonEvent == Pressed 
+              _other -> False
+
+          mmtn event = 
+            case eventPayload event of
               MouseMotionEvent mouseMotionEvent ->
                 mouseMotionEventState mouseMotionEvent == [ButtonLeft]
               _other                            -> False 
@@ -74,12 +89,18 @@ myInput = do
           (itx,ised) = fromMaybe (T.empty,False) $ find (/=(T.empty,False)) $ 
                                   filter (/=(T.empty,True)) (map getItx events) 
           cPos = fromMaybe (P (V2 (-1) (-1))) $ find (/=P (V2 (-1) (-1))) (map mbtn events)
+          mPos = fromMaybe (P (V2 (-1) (-1))) $ find (/=P (V2 (-1) (-1))) (map motn events)
           ismc = fromMaybe False $ Just (not (null events) && head (map mmtn events))
+          iscl = fromMaybe False $ Just (not (null events) && head (map mmcl events))
           mdres
             | keyModifierLeftShift md || keyModifierRightShift md = Shf 
             | keyModifierLeftCtrl md || keyModifierRightCtrl md = Ctr 
             | keyModifierLeftAlt md || keyModifierRightAlt md = Alt 
             | otherwise = Non 
+
           mps = let (P (V2 px py)) = cPos in V2 (fromIntegral px) (fromIntegral py)
-      return $ Just (InpRes kc mdres itx mps ismc ised ir) 
+
+          mps0 = let (P (V2 px py)) = mPos in V2 (fromIntegral px) (fromIntegral py)
+
+      return $ Just (InpRes kc mdres itx (mps,mps0) (ismc,iscl) ised ir) 
  

@@ -11,7 +11,8 @@ import Linear.V2 (V2(..))
 import Linear.V4 (V4(..))
 import Data.Maybe(fromMaybe)
 import Data.List (nub,elemIndex)
-import MyData (Pos,Dot,Dig,Jump,Mgn,Size,Attr(..),WMode(..),dotSize)
+import MyData (Pos,Dot,Dig,Jump,Mgn,Size,Attr(..),WMode(..)
+              ,dotSize,needRotate)
 
 type Index = Int
 type Line = Int
@@ -109,7 +110,8 @@ nextPos ch tw nw wm ps@(V2 ox oy) (V2 ww wh) (V4 mr mt ml mb) (ln,lt) =
     let cn = fromEnum ch
         htw = tw `div` 2
         ihf = cn > 31 && cn < 256 
-        irt = ch `T.elem` "＝ー「」（）：；『』→←↓↑’‘"
+        irt = ch `elem` needRotate 
+--        irt = ch `T.elem` "＝ー「」（）：；『』→←↓↑’‘"
         inl = ch == '\n'
         ins = ch `T.elem` "\n"
         delta 

@@ -5,6 +5,7 @@ import Linear.V2 (V2(..))
 import Linear.V4 (V4(..))
 import qualified Control.Monad.State.Strict as S
 import Control.Monad (when)
+--import Control.Monad.IO.Class (liftIO)
 import qualified Data.Text as T
 import MyData (State(..),Active(..),Attr(..),Coding(..),Jumping(..),Modif(..)
               ,WMode(..),EMode(..),FMode(..),Input(..)
@@ -25,8 +26,11 @@ inputEvent _ = do
   case evInput of
     Nothing -> return (1,Just (NON,False))
 -- md: keyModifier ('a'-alt, 'c'-control, 's'-shift, ' '-nothing)
-    Just (InpRes kc md it mps isc ised _) -> do
+    Just (InpRes kc md it (mps,mps0) (isc,icl) ised _) -> do
+      -- mps : mouse position (when pressed), isc (mouse pressed?)
+      -- mps0 : mouse position (always), icl : (just clicked?)
       st <- S.get
+--      liftIO $ print icl 
       let (actSt,cdnSt) = (act st, cdn st) 
           (texSt,etxSt,dtsSt,tpsSt,dfnSt,digSt,comSt,wszSt,mgnSt,atrSt,emdSt
                 ,wmdSt,cplSt,ifmSt,iskSt,iblSt) = 
@@ -34,7 +38,7 @@ inputEvent _ = do
               ,dig st,com st,wsz st,mgn st,atr st,emd st,wmd st,cpl st
               ,ifm st,isk st,ibl st)
           isKeyPressed = kc/=KeycodeUnknown
-          isMousePressed = mps/=V2 (-1) (-1)
+          isMouseActive = mps/=V2 (-1) (-1)
           isQuit = kc==KeycodeEscape   -- ESC Key
 
           isNor = emdSt==Nor
@@ -201,10 +205,10 @@ inputEvent _ = do
             | otherwise = texSt
           ndts 
             | isDrawClear = []
-            | isMousePressed && isc && not (null dtsSt) = 
+            | isMouseActive && isc && not (null dtsSt) = 
                  dtsSt ++ addMidDots (last dtsSt) (toDotPos mps scrAt,cplSt)
                        ++ [(toDotPos mps scrAt,cplSt)]
-            | isMousePressed = dtsSt++[(toDotPos mps scrAt,cplSt)]  
+            | isMouseActive  = dtsSt++[(toDotPos mps scrAt,cplSt)]  
             | otherwise = dtsSt
           ncod
             | isExeCode && yo==Io = if '\n' `elem` ta then lines ta else [ta] 
@@ -237,7 +241,7 @@ inputEvent _ = do
             | isExeCode && yo==Io = EXE
             | isQuit = QIT
             | isKeyPressed = PKY
-            | isMousePressed = PMO
+            | isMouseActive = PMO
             | otherwise = NON
           nactSt = actSt{tex=ntex,etx=netx,dts=ndts,tps=ntps}
           isTpsUpdate = tpsSt /= ntps

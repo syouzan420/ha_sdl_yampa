@@ -10,7 +10,7 @@ module MyData (Pos,Color,Mgn,Size,ChPos(..),TextPos,TextData(..),IsFormat,Dot,Co
               ,rubiSize,delayTime,cursorTime
               ,initYokoPos,initTatePos,textFileName,textPosFile
               ,colorPallet,statusPos,dotFileName
-              ,textLengthLimit,jumpNameFile) 
+              ,textLengthLimit,jumpNameFile,needRotate) 
   where
 
 import Data.Text (Text)
@@ -78,7 +78,8 @@ data State = State{act :: !Active, drw :: ![Drw], img :: ![Img], isz :: ![Size]
                   ,dig :: ![Dig],cdn :: !Coding ,com :: !String
                   ,wsz :: !Size, mgn :: !Mgn , atr :: !Attr
                   ,wmd :: !WMode, emd :: !EMode, cpl :: !Cnum, lsz :: !CInt
-                  ,ifm :: !Bool, isk :: !Bool, iup :: !Bool, ibl :: !Bool}
+                  ,ifm :: !Bool, isk :: !Bool, iup :: !Bool, ibl :: !Bool
+                  }
 
 -- tex: edit text
 -- etx: editing text for Kanji-Henkan
@@ -153,9 +154,9 @@ imageFiles :: [FilePath]
 imageFiles = map (\s -> "images/"++s++".png") imageNames 
 
 imageNames :: [String]
-imageNames = ["nori","onigiri","en2","en2_1","raipuni_fig2","raipuni_table2"
+imageNames = ["leaf","nori","onigiri","en2","en2_1","raipuni_fig2","raipuni_table2"
              ,"raipuni_fig3","raipuni_fig4","raipuni_table3","raipuni_fig5"
-             ,"raipuni_fig6","raipuni_fig7"]
+             ,"raipuni_fig6","raipuni_fig7","raipuni_fig8"]
            ++ blockNames
 
 blockNames :: [String]
@@ -269,3 +270,6 @@ delayTime = 3
 
 cursorTime :: Int
 cursorTime = 60 
+
+needRotate :: String
+needRotate = "～〜＝ー「」（）：；『』→←↓↑’‘"
